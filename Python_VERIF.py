@@ -24,7 +24,7 @@ def load_data(path):
 chemin_excel = "https://www.dropbox.com/scl/fo/kehcuj3waaoxkuap0f4tc/AAQNcuCK-ZrsbgQww8gSr18?rlkey=kywrv46vq4yu1ygnkwacko8po&dl=1"
 
 colonnes_attendues = ["Type_depot", "Statut_traitement", "Nature_plainte", "Categorie", "Date_reception", "Nb_jour"]
-df = load_data(chemin_excel, engine = 'openpyxl')
+df = load_data(chemin_excel)
 
 if df.empty:
     st.stop()           # stopper le processus si df nulle
