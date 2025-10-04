@@ -57,6 +57,7 @@ st.sidebar.header("Filtres")
 # Conversion des dates
 df['Date_reception'] = pd.to_datetime(df['Date_reception'], dayfirst=True)
 df['Année'] = df['Date_reception'].dt.year
+df['Mois'] = df['Date_reception'].dt.to_period('M').dt.to_timestamp()
 df['Trimestre'] = df['Date_reception'].dt.to_period('Q').astype(str)
 
 # Filtre année avec sélection de l'année en cours par défaut
@@ -80,10 +81,18 @@ Statuts = st.sidebar.multiselect(
     default=df["Statut_traitement"].dropna().unique()
 )
 
-# Filtrage global
+# Filtrage global initial
 df_filtered = df[df["Type_depot"].isin(Types) & df["Statut_traitement"].isin(Statuts)]
 if annee_choisie:
     df_filtered = df_filtered[df_filtered['Année'] == annee_choisie]
+
+# Filtre Trimestre
+trimestres_disponibles = sorted(df_filtered['Trimestre'].unique())
+trimestres_disponibles.insert(0, "Tous")
+trimestre_choisi = st.sidebar.selectbox("Choisir un trimestre :", trimestres_disponibles)
+
+if trimestre_choisi != "Tous":
+    df_filtered = df_filtered[df_filtered['Trimestre'] == trimestre_choisi]
 
 # ============================================================== 
 # Indicateurs clés avec fond coloré et texte blanc
@@ -98,7 +107,6 @@ non_traites = len(df_filtered[df_filtered["Statut_traitement"] == "Non traité"]
 
 bg_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]  # Total, Achevés, En cours, Non traités
 
-# CSS global pour texte blanc
 st.markdown("""
 <style>
 [data-testid="stMetric"] { border-radius: 15px; padding: 15px; text-align: center; box-shadow: 0px 0px 10px rgba(0,0,0,0.2);}
@@ -166,16 +174,7 @@ st.plotly_chart(fig3, use_container_width=True)
 # ============================================================== 
 # Graphique ligne : évolution temporelle
 # ============================================================== 
-# Sélection trimestre
-trimestre_disponibles = sorted(df_filtered['Trimestre'].unique())
-trimestre_choisie = st.selectbox("Choisir un trimestre :", ["Tous"] + trimestre_disponibles)
-
-if trimestre_choisie != "Tous":
-    df_trim = df_filtered[df_filtered['Trimestre'] == trimestre_choisie]
-else:
-    df_trim = df_filtered
-
-df_grief = df_trim.groupby(['Mois', 'Nature_plainte']).size().reset_index(name='Nombre_Griefs')
+df_grief = df_filtered.groupby(['Mois', 'Nature_plainte']).size().reset_index(name='Nombre_Griefs')
 fig_line = px.line(
     df_grief, x="Mois", y="Nombre_Griefs", color="Nature_plainte",
     markers=True, title=f"Évolution mensuelle des griefs par nature ({annee_choisie})",
@@ -187,8 +186,9 @@ st.plotly_chart(fig_line, use_container_width=True)
 # ============================================================== 
 # Graphique durée moyenne de traitement
 # ============================================================== 
-if "Nb_jour" in df_filtered.columns:
-    df_duree = df_filtered.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values(by="Nb_jour")
+if "Nb_jour" in df_filtered.columns and not df_filtered.empty:
+    df_duree = df_filtered.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index()
+    df_duree = df_duree.sort_values(by="Nb_jour")
     fig_duree = px.bar(
         df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".2f",
         title="Durée moyenne de traitement par nature", height=400,
