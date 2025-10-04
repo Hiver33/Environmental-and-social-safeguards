@@ -23,6 +23,23 @@ def load_data(path):
 
 url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx?rlkey=o33ioc0uz9vvtclyjp9liyk70&st=d01ynu9e&dl=1"
 
+# ============================================================== 
+# Chargement dynamique du fichier source
+# ==============================================================
+st.sidebar.markdown("###🗃️ Charger un ficher Excel")
+uploaded_file = st.sidebar.file_uploader(
+    "Choisir un fichier Excel (.xlsx)", 
+    type = ["XLSX"],
+    help = "Importer ici votre propre fichier de données"
+)
+
+if uploaded_file is not None : 
+    #si un fichier est importer par l'utilisateur
+    df = load_data(uploaded_file)
+else : 
+    #sinon, on charge le fichier le fichier par défaut
+    st.sidebar.info("Aucune source importée. Utilisation du fichier par défaut.")
+    
 colonnes_attendues = ["Type_depot", "Statut_traitement", "Nature_plainte", "Categorie", "Date_reception", "Nb_jour"]
 df = load_data(url_excel)
 
