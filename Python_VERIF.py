@@ -97,7 +97,7 @@ st.subheader("📌 Indicateurs clés")
 total_griefs = len(df_filtered)
 acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé", "Grief non recevable"])])
 en_cours = len(df_filtered[df_filtered["Statut_traitement"] == "En cours"])
-non_traites = len(df_filtered[df_filtered["Statut_traitement"] == "Non traité"])
+non_traites = len(df_filtered[df_filtered["Statut_traitement"] == "A traiter"])
 
 bg_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]  # Total, Achevés, En cours, Non traités
 text_color = "#111111"  # texte sombre
