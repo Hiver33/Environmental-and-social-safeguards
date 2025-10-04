@@ -232,53 +232,18 @@ st.dataframe(
     use_container_width=True
 )
 
-# ============================================================== 
-# Style général du dashboard (thème sombre + indicateurs colorés)
-# ============================================================== 
 st.markdown("""
-    <style>
-        /* Fond général sombre */
-        .stApp {
-            background-color: #1a1d21;
-            color: white;
-        }
-        h1, h2, h3 {
-            color: #00ccff;
-        }
-
-        /* ======== STYLES DES 4 INDICATEURS ======== */
-        div[data-testid="metric-container"] {
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            color: white;
-        }
-
-        /* 1️⃣ Total des griefs */
-        div[data-testid="metric-container"]:nth-child(1) {
-            background-color: #007bff;  /* bleu */
-        }
-
-        /* 2️⃣ En cours */
-        div[data-testid="metric-container"]:nth-child(2) {
-            background-color: #f39c12;  /* orange */
-        }
-
-        /* 3️⃣ Achevé */
-        div[data-testid="metric-container"]:nth-child(3) {
-            background-color: #27ae60;  /* vert */
-        }
-
-        /* 4️⃣ Non traité */
-        div[data-testid="metric-container"]:nth-child(4) {
-            background-color: #e74c3c;  /* rouge */
-        }
-
-        /* Texte blanc pour les labels et valeurs */
-        div[data-testid="metric-container"] > label, 
-        div[data-testid="metric-container"] > div {
-            color: white !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
+<style>
+[data-testid="stMetricValue"] {
+    color: white;            /* valeur en blanc */
+}
+[data-testid="stMetricLabel"] {
+    color: white;            /* titre en blanc */
+}
+[data-testid="stMetric"] {
+    background: #222;        /* fond sombre */
+    padding: 10px;
+    border-radius: 10px;
+}
+</style>
+""", unsafe_allow_html=True)
