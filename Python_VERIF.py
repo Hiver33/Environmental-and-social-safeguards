@@ -218,32 +218,51 @@ if "Nb_jour" in df_filtered.columns:
 else:
     st.info("⚠️ Pas de colonne 'Nb_jour' pour calculer la durée moyenne de traitement.")
 
-# ============================================================== 
-# Tableau détaillé limité à 10 lignes
-# ============================================================== 
-max_lignes = 10
-hauteur_ligne = 35
-hauteur_tableau = min(len(df_filtered), max_lignes) * hauteur_ligne
+# ==============================================
+# 🔹 Indicateurs clés du tableau de bord
+# ==============================================
+import streamlit as st
 
-st.subheader("📑 Tableau des griefs")
-st.dataframe(
-    df_filtered.style.background_gradient(cmap='Blues'),
-    height=hauteur_tableau,
-    use_container_width=True
-)
-
+# --- CSS pour styliser uniquement les 4 indicateurs ---
 st.markdown("""
 <style>
-[data-testid="stMetricValue"] {
-    color: white;            /* valeur en blanc */
-}
-[data-testid="stMetricLabel"] {
-    color: white;            /* titre en blanc */
-}
+/* Style général de chaque carte indicateur */
 [data-testid="stMetric"] {
-    background: #222;        /* fond sombre */
-    padding: 10px;
-    border-radius: 10px;
+    background-color: #1c1c1c;   /* fond sombre */
+    border-radius: 15px;         /* coins arrondis */
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(255,255,255,0.1); /* effet lumineux doux */
+}
+
+/* Couleur et style du titre de chaque indicateur */
+[data-testid="stMetricLabel"] {
+    color: #ffffff !important;   /* texte blanc */
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Couleur et style de la valeur principale */
+[data-testid="stMetricValue"] {
+    color: #ffffff !important;   /* valeur blanche */
+    font-size: 28px;
+    font-weight: 700;
 }
 </style>
 """, unsafe_allow_html=True)
+
+# --- Disposition sur 4 colonnes ---
+col1, col2, col3, col4 = st.columns(4)
+
+# --- Affichage des indicateurs ---
+with col1:
+    st.metric(label="Total des griefs", value=total_griefs)
+
+with col2:
+    st.metric(label="Achevés", value=acheves)
+
+with col3:
+    st.metric(label="En cours", value=en_cours)
+
+with col4:
+    st.metric(label="Non traités", value=non_traites)
