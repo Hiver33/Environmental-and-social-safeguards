@@ -21,7 +21,7 @@ def load_data(path):
         st.error(f"❌ Impossible de charger le fichier Excel : {e}")
         return pd.DataFrame()
 
-url_excel = "https://www.dropbox.com/scl/fo/kehcuj3waaoxkuap0f4tc/AAQNcuCK-ZrsbgQww8gSr18?rlkey=kywrv46vq4yu1ygnkwacko8po&dl=1"
+url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx?rlkey=o33ioc0uz9vvtclyjp9liyk70&st=d01ynu9e&dl=1"
 
 colonnes_attendues = ["Type_depot", "Statut_traitement", "Nature_plainte", "Categorie", "Date_reception", "Nb_jour"]
 df = load_data(url_excel)
