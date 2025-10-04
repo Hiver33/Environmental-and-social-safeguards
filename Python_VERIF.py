@@ -95,7 +95,7 @@ st.title("📊 Dashboard Suivi du MGG")
 st.subheader("📌 Indicateurs clés")
 
 total_griefs = len(df_filtered)
-acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé", "Grief non récevable"])])
+acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé", "Grief non recevable"])])
 en_cours = len(df_filtered[df_filtered["Statut_traitement"] == "En cours"])
 non_traites = len(df_filtered[df_filtered["Statut_traitement"] == "Non traité"])
 
