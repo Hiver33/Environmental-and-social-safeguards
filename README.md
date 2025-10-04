@@ -1,23 +1,26 @@
 # 🌳 Environmental-and-social-safeguards
 This folder contains data projects **GriefPy** on grievances and environmental and social safeguards
 
-#*******************************
+#=============================
 # 🗂️ GriefPy
-#*******************************
+#=============================
 
-**⚙️ Transforming grievances into insights with Python**
+GriefPy is a Python-based dashboard project focused on managing grievances and tracking environmental and social safeguards. 
+It provides interactive visualizations to analyze complaint types, status, and processing times.
 
-GriefPy est un dashboard interactif développé avec Python et Streamlit pour suivre et analyser les plaintes sociales (grievances) dans le cadre de projets de social safeguards.
+## 🔧Features
+- 1️⃣ Interactive filtering by year, type of complaint, and status
+- 2️⃣ Key indicators with color-coded metrics
+- 3️⃣ Visualizations: bar charts, pie charts, line charts, and histograms
+- 4️⃣ Average processing time per complaint
+- 5️⃣ Data table with top complaints
 
-## 🔧 Fonctionnalités
-- 1️⃣ Visualisation de l’évolution mensuelle des griefs par nature.
-- 2️⃣ Répartition des plaintes par type de dépôt et statut.
-- 3️⃣ Histogramme par nature de plainte.
-- 4️⃣ Calcul et affichage de la durée moyenne de traitement des plaintes.
-- 6️⃣ Filtres dynamiques : année, trimestre, type de dépôt, statut.
-- 7️⃣ Interface intuitive avec design sombre et graphiques interactifs.
+## 🛠️ Setup
+1. Clone this repository
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run the dashboard: `streamlit run Python_VERIF.py`
 
-## 🛠️ Installation
-1. Cloner le dépôt :
-   ```bash
-   git clone <URL_DU_DEPOT>
+## 📑 Data
+- Default Excel data included for demo
+- Users can upload their own Excel files
+
