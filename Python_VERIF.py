@@ -122,7 +122,7 @@ fig_stat = px.pie(
     template="plotly_dark", height=400
 )
 fig_type.update_layout(
-    legende_title_texte = "Statut du traitement"
+    legend_title_text = "Statut du traitement"
 )
 fig_stat.update_traces(textinfo="percent+label", textposition="inside")
 
@@ -148,7 +148,7 @@ fig_nature = px.histogram(
 fig_nature.update_layout(
     xaxis_title="Nature de griefs",
     yaxis_title="Nombre",
-    legende_title_texte = "Statut du traitement"
+    legend_title_text = "Statut du traitement"
 )
 st.plotly_chart(fig_nature, use_container_width=True)
 
@@ -190,7 +190,7 @@ else:
         df_filtered, names="Sexe", title="Répartition par sexe", template="plotly_dark", height=400
     )
     fig_comm.update_layout(
-        legende_title_texte = "Sexe"
+        legend_title_text = "Sexe"
     )
     fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
     c1.plotly_chart(fig_comm, use_container_width=True)
@@ -240,7 +240,7 @@ if "Nb_jour" in df_trim.columns:
     fig_duree.update_layout(
         xaxis_title="Nature de griefs",
         yaxis_title="Durée (Nb de jours)",
-        legende_title_texte = "Nature de griefs"
+        legend_title_text = "Nature de griefs"
     )
     st.plotly_chart(fig_duree, use_container_width=True)
 
