@@ -100,14 +100,9 @@ fig_stat = px.pie(
 )
 fig_stat.update_traces(textinfo="percent+label", textposition="inside")
 
-# Mode plein écran
-if plein_ecran:
-    st.plotly_chart(fig_type, use_container_width=True)
-    st.plotly_chart(fig_stat, use_container_width=True)
-else:
-    c1, c2 = st.columns(2)
-    c1.plotly_chart(fig_type, use_container_width=True)
-    c2.plotly_chart(fig_stat, use_container_width=True)
+# Mode plein écran : tous les graphiques sur leur propre ligne
+st.plotly_chart(fig_type, use_container_width=True)
+st.plotly_chart(fig_stat, use_container_width=True)
 
 # Histogramme par Nature
 ordre_nature = df_filtered["Nature_plainte"].value_counts().index.tolist()
@@ -120,24 +115,38 @@ st.plotly_chart(fig_nature, use_container_width=True)
 
 # Répartition Communauté / Sexe
 st.subheader("🏘️ Répartition par communauté et sexe")
-c1, c2 = st.columns(2 if not plein_ecran else 1)
-comm_counts = df_filtered["Communaute"].value_counts().sort_values()
-fig_comm = px.bar(
-    x=comm_counts.index, y=comm_counts.values, text=comm_counts.values,
-    title="Nombre de griefs par communauté", template="plotly_dark", height=400
-)
-fig_sexe = px.pie(df_filtered, names="Sexe", title="Répartition par sexe", template="plotly_dark", height=400)
-fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
-c1.plotly_chart(fig_comm, use_container_width=True)
-c2.plotly_chart(fig_sexe, use_container_width=True)
+if plein_ecran:
+    st.plotly_chart(px.bar(
+        x=df_filtered["Communaute"].value_counts().sort_values().index,
+        y=df_filtered["Communaute"].value_counts().sort_values().values,
+        text=df_filtered["Communaute"].value_counts().sort_values().values,
+        title="Nombre de griefs par communauté", template="plotly_dark", height=400
+    ), use_container_width=True)
+    
+    st.plotly_chart(px.pie(
+        df_filtered, names="Sexe", title="Répartition par sexe", template="plotly_dark", height=400
+    ).update_traces(textinfo="percent+label", textposition="inside"), use_container_width=True)
+else:
+    c1, c2 = st.columns(2)
+    fig_comm = px.bar(
+        x=df_filtered["Communaute"].value_counts().sort_values().index,
+        y=df_filtered["Communaute"].value_counts().sort_values().values,
+        text=df_filtered["Communaute"].value_counts().sort_values().values,
+        title="Nombre de griefs par communauté", template="plotly_dark", height=400
+    )
+    fig_sexe = px.pie(
+        df_filtered, names="Sexe", title="Répartition par sexe", template="plotly_dark", height=400
+    )
+    fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
+    c1.plotly_chart(fig_comm, use_container_width=True)
+    c2.plotly_chart(fig_sexe, use_container_width=True)
 
 # Nature par Sexe avec labels
 st.subheader("👥 Nature des griefs par sexe")
-df_cat_sexe = df_filtered.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre")
-ordre_nature_tri = df_cat_sexe.groupby("Nature_plainte")["Nombre"].sum().sort_values().index.tolist()
 fig_cat_sexe = px.bar(
-    df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe",
-    category_orders={"Nature_plainte": ordre_nature_tri},
+    df_filtered.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre"),
+    y="Nature_plainte", x="Nombre", color="Sexe",
+    category_orders={"Nature_plainte": df_filtered["Nature_plainte"].value_counts().index.tolist()},
     orientation="h", template="plotly_dark", height=400, text="Nombre",
     color_discrete_sequence=px.colors.qualitative.Plotly
 )
