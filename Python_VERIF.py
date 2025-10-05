@@ -95,19 +95,24 @@ fig_type = px.bar(
     title="Répartition par type de dépôt", template="plotly_dark", height=400
 )
 
-# Avancement général (vert pour Achevé)
-stat_counts = df_filtered["Statut_traitement"].value_counts()
-colors_map = {s:"#90ee90" if s=="Achevé" else "#636efa" for s in stat_counts.index}
+# Avancement général (vert pour Achevé, autres couleurs fixes)
+df_filtered["Statut_traitement_clean"] = df_filtered["Statut_traitement"].str.strip()
+
+stat_counts = df_filtered["Statut_traitement_clean"].value_counts()
+# Couleurs fixes pour chaque statut
+colors_map = {
+    "Achevé": "#90ee90",                 # vert clair
+    "Grief non récevable": "#00ccff",    # bleu clair
+    "En cours": "#ffcc00",               # jaune
+    "Non traité": "#ff6666"              # rouge
+}
+
 fig_stat = px.pie(
-    df_filtered, names="Statut_traitement", title="Avancement général",
-    color="Statut_traitement", color_discrete_map=colors_map,
+    df_filtered, names="Statut_traitement_clean", title="Avancement général des griefs",
+    color="Statut_traitement_clean", color_discrete_map=colors_map,
     template="plotly_dark", height=400
 )
 fig_stat.update_traces(textinfo="percent+label", textposition="inside")
-
-c1,c2 = st.columns(2 if not plein_ecran else 1)
-c1.plotly_chart(fig_type,use_container_width=True)
-c2.plotly_chart(fig_stat,use_container_width=True)
 
 # Histogramme par Nature
 ordre_nature = df_filtered["Nature_plainte"].value_counts().index.tolist()
