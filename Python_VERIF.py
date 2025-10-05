@@ -78,12 +78,12 @@ h1,h2,h3{{color:#00ccff;}}
 #====================================================================
 st.title("📊 Dashboard Suivi du MGG")
 total = len(df_filtered)
-acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non récevable"])])
+acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])])
 en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
-non_traites = len(df_filtered[df_filtered["Statut_traitement"]=="Non traité"])
+a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 
 cols = st.columns(4)
-metrics = [(total,"Total"),(acheves,"Achevés"),(en_cours,"En cours"),(non_traites,"Non traités")]
+metrics = [(total,"Total"),(acheves,"Achevés"),(en_cours,"En cours"),(a_traiter,"A traiter")]
 colors = ["#00ccff","#00ff99","#ffcc00","#ff6666"]
 for col,(val,label),color in zip(cols,metrics,colors):
     col.markdown(f"""
@@ -108,9 +108,9 @@ fig_type = px.bar(
 # Avancement général avec couleurs fixes
 colors_map_statut = {
     "Achevé": "#00ff99",
-    "Grief non récevable": "#ffcc00",
+    "Grief non recevable": "#ffcc00",
     "En cours": "#636efa",
-    "Non traité": "#ff6666"
+    "A traiter": "#ff6666"
 }
 fig_stat = px.pie(
     df_filtered, names="Statut_traitement", title="Avancement général",
