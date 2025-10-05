@@ -1,5 +1,5 @@
 ## *************** Script Python Dashboard ***************
-##        Projet PyDashboard – Version Plein Écran Responsive Optimisée
+##        Projet PyDashboard – Version Plein Écran Responsive Dynamique
 ## *******************************************************
 
 import streamlit as st
@@ -21,22 +21,12 @@ def load_data(path):
 
 url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx?rlkey=o33ioc0uz9vvtclyjp9liyk70&st=d01ynu9e&dl=1"
 
-# ============================================================== 
-# Sidebar : Upload dynamique
-# ============================================================== 
 st.sidebar.markdown("### 🗃️ Charger un fichier Excel")
 uploaded_file = st.sidebar.file_uploader("Choisir un fichier Excel (.xlsx)", type=["xlsx"])
+df = load_data(uploaded_file) if uploaded_file else load_data(url_excel)
 
-if uploaded_file is not None:
-    df = load_data(uploaded_file)
-else:
-    st.sidebar.info("Aucune source importée. Utilisation du fichier par défaut.")
-    df = load_data(url_excel)
-
-colonnes_attendues = [
-    "Type_depot", "Statut_traitement", "Nature_plainte",
-    "Categorie", "Date_reception", "Nb_jour", "Communaute", "Sexe"
-]
+colonnes_attendues = ["Type_depot", "Statut_traitement", "Nature_plainte",
+                      "Categorie", "Date_reception", "Nb_jour", "Communaute", "Sexe"]
 if df.empty or not all(col in df.columns for col in colonnes_attendues):
     st.error("⚠️ Le fichier ne contient pas toutes les colonnes attendues ou est vide.")
     st.stop()
@@ -71,7 +61,6 @@ Statuts = st.sidebar.multiselect(
 )
 
 plein_ecran = st.sidebar.toggle("🖥️ Mode Plein Écran")
-
 df_filtered = df[df["Type_depot"].isin(Types) & df["Statut_traitement"].isin(Statuts)]
 if annee_choisie:
     df_filtered = df_filtered[df_filtered["Année"] == annee_choisie]
@@ -79,25 +68,38 @@ if annee_choisie:
 # ============================================================== 
 # Style global responsive
 # ============================================================== 
-page_width = "100%" if plein_ecran else "95%"
-font_size = "18px" if plein_ecran else "16px"
-margin = "20px" if not plein_ecran else "5px"
-
 st.markdown(f"""
 <style>
 .stApp {{
     background-color: #1a1d21;
     color: white;
-    max-width: {page_width};
-    margin-left: auto;
-    margin-right: auto;
-    padding: {margin};
+    max-width: 100%;
+    margin-left:auto;
+    margin-right:auto;
+    padding:5px;
 }}
 [data-testid="stMetric"] {{
     border-radius: 15px;
     padding: 12px;
 }}
-h1, h2, h3 {{ color: #00ccff; font-size: {font_size}; }}
+h1,h2,h3{{color:#00ccff;}}
+.stPlotlyChart {{
+    width: 100% !important;
+}}
+.flex-container {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}}
+.flex-item {{
+    flex: 1 1 45%;
+    min-width: 300px;
+}}
+@media (max-width: 768px) {{
+    .flex-item {{
+        flex: 1 1 100%;
+    }}
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -109,124 +111,100 @@ st.subheader("📌 Indicateurs clés")
 
 total_griefs = len(df_filtered)
 acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé", "Grief non récevable"])])
-en_cours = len(df_filtered[df_filtered["Statut_traitement"] == "En cours"])
-non_traites = len(df_filtered[df_filtered["Statut_traitement"] == "Non traité"])
+en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
+non_traites = len(df_filtered[df_filtered["Statut_traitement"]=="Non traité"])
 
-bg_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
+bg_colors = ["#00ccff","#00ff99","#ffcc00","#ff6666"]
 cols = st.columns(4)
-indicateurs = [(cols[i], bg_colors[i], v, l) for i, (v,l) in enumerate([
-    (total_griefs,"Total des griefs"), (acheves,"Achevés"), 
-    (en_cours,"En cours"), (non_traites,"Non traités")
+indicateurs = [(cols[i], bg_colors[i], v, l) for i,(v,l) in enumerate([
+    (total_griefs,"Total des griefs"),(acheves,"Achevés"),
+    (en_cours,"En cours"),(non_traites,"Non traités")
 ])]
-for col, color, value, label in indicateurs:
+for col,color,value,label in indicateurs:
     col.markdown(f"""
         <div style="background-color:{color}; padding:15px; border-radius:15px;">
             <p style="font-size:28px; font-weight:700; color:black;">{value}</p>
             <p style="font-size:16px; font-weight:600; color:black;">{label}</p>
         </div>
-    """, unsafe_allow_html=True)
+    """,unsafe_allow_html=True)
 
 # ============================================================== 
-# Graphiques principaux
+# Couleurs uniformes pour "Achevé"
+# ============================================================== 
+color_map_statut = {
+    "Achevé":"#00ff99",
+    "Grief non récevable":"#636efa",
+    "En cours":"#ffcc00",
+    "Non traité":"#ff6666"
+}
+
+# ============================================================== 
+# Graphiques principaux (responsive flex)
 # ============================================================== 
 st.subheader("📈 Analyse visuelle")
+graph_list = []
 
-# Répartition par type de dépôt
-ordre_type = df_filtered.groupby("Type_depot").size().reset_index(name="Nombre").sort_values("Nombre", ascending=True)
-fig1 = px.bar(
-    ordre_type, x="Type_depot", y="Nombre", text="Nombre",
-    title="Répartition des plaintes par type de dépôt",
-    height=400, template="plotly_dark"
-)
+# Type dépôt
+ordre_type = df_filtered.groupby("Type_depot").size().reset_index(name="Nombre").sort_values("Nombre")
+fig_type = px.bar(ordre_type, x="Type_depot", y="Nombre", text="Nombre",
+                  title="Répartition des plaintes par type de dépôt",
+                  height=400, template="plotly_dark")
+graph_list.append(fig_type)
 
-# Avancement général avec couleur fixe pour "Achevé"
-color_map = {
-    "Achevé": "#00ff99",                 # vert clair
-    "Grief non récevable": "#636efa",    # bleu
-    "En cours": "#ffcc00",               # jaune
-    "Non traité": "#ff6666"              # rouge
-}
-fig2 = px.pie(
-    df_filtered, names="Statut_traitement",
-    title="Avancement général des griefs",
-    height=400, template="plotly_dark",
-    color="Statut_traitement", color_discrete_map=color_map
-)
-fig2.update_traces(textinfo="percent+label", textposition="inside")
+# Avancement général
+fig_avancement = px.pie(df_filtered, names="Statut_traitement",
+                        color="Statut_traitement", color_discrete_map=color_map_statut,
+                        title="Avancement général des griefs", height=400, template="plotly_dark")
+fig_avancement.update_traces(textinfo="percent+label", textposition="inside")
+graph_list.append(fig_avancement)
 
-c1, c2 = st.columns(2 if not plein_ecran else 1)
-with c1: st.plotly_chart(fig1, use_container_width=True)
-with c2: st.plotly_chart(fig2, use_container_width=True)
-
-# Histogramme par Nature
+# Histogramme nature
 ordre_nature = df_filtered["Nature_plainte"].value_counts().index.tolist()
-fig3 = px.histogram(
-    df_filtered, y="Nature_plainte", color="Statut_traitement",
-    title="Distribution par nature", text_auto=True,
-    category_orders={"Nature_plainte": ordre_nature},
-    orientation="h", height=400, template="plotly_dark"
-)
-st.plotly_chart(fig3, use_container_width=True)
+fig_nature = px.histogram(df_filtered, y="Nature_plainte", color="Statut_traitement",
+                          category_orders={"Nature_plainte":ordre_nature},
+                          title="Distribution par nature", text_auto=True,
+                          orientation="h", height=400, template="plotly_dark",
+                          color_discrete_map=color_map_statut)
+graph_list.append(fig_nature)
 
-# ============================================================== 
-# Graphiques par Communauté et par Sexe
-# ============================================================== 
-st.subheader("🏘️ Répartition des griefs par communauté et par sexe")
-col_c1, col_c2 = st.columns(2 if not plein_ecran else 1)
-
-# Nb de griefs par communauté
-ordre_comm = df_filtered["Communaute"].value_counts().sort_values(ascending=True)
-fig_comm = px.bar(
-    x=ordre_comm.index, y=ordre_comm.values,
-    labels={"x": "Communauté", "y": "Nombre de griefs"},
-    text=ordre_comm.values,
-    title="Nombre de griefs par communauté",
-    height=400, template="plotly_dark"
-)
-
-# Répartition par sexe
-fig_sexe = px.pie(
-    df_filtered, names="Sexe", title="Répartition des griefs par sexe",
-    height=400, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly
-)
-fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
-
-with col_c1: st.plotly_chart(fig_comm, use_container_width=True)
-with col_c2: st.plotly_chart(fig_sexe, use_container_width=True)
-
-# ============================================================== 
-# Graphique Nature des griefs par sexe (tri croissant)
-# ============================================================== 
-st.subheader("👥 Nature des griefs par sexe")
+# Communauté et sexe
 df_cat_sexe = df_filtered.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre")
 ordre_nature_tri = df_cat_sexe.groupby("Nature_plainte")["Nombre"].sum().sort_values().index.tolist()
-fig_cat_sexe = px.bar(
-    df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe",
-    category_orders={"Nature_plainte": ordre_nature_tri},
-    orientation="h", title="Nature des griefs par sexe",
-    template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly,
-    height=400
-)
-st.plotly_chart(fig_cat_sexe, use_container_width=True)
+
+fig_comm = px.bar(df_filtered["Communaute"].value_counts().sort_values().reset_index(), 
+                  x="index", y="Communaute", text="Communaute",
+                  title="Nombre de griefs par communauté", height=400, template="plotly_dark")
+graph_list.append(fig_comm)
+
+fig_sexe = px.pie(df_filtered, names="Sexe", title="Répartition par sexe", height=400, template="plotly_dark")
+graph_list.append(fig_sexe)
+
+fig_cat_sexe_graph = px.bar(df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe",
+                            category_orders={"Nature_plainte":ordre_nature_tri},
+                            orientation="h", height=400, template="plotly_dark")
+graph_list.append(fig_cat_sexe_graph)
+
+# Flex container pour affichage dynamique
+st.markdown('<div class="flex-container">', unsafe_allow_html=True)
+for fig in graph_list:
+    st.markdown('<div class="flex-item">', unsafe_allow_html=True)
+    st.plotly_chart(fig, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================================== 
-# Graphique ligne : évolution temporelle (Top N)
+# Evolution temporelle Top N
 # ============================================================== 
 st.subheader("📈 Évolution temporelle des griefs")
 top_n = st.slider("Afficher le Top N des natures :", 3, 10, 5)
-
 trimestres = sorted(df_filtered["Trimestre"].unique())
-trimestre_choisi = st.selectbox("Filtrer par trimestre :", ["Tous"] + trimestres)
-df_trim = df_filtered if trimestre_choisi == "Tous" else df_filtered[df_filtered["Trimestre"] == trimestre_choisi]
-
+trimestre_choisi = st.selectbox("Filtrer par trimestre :", ["Tous"]+trimestres)
+df_trim = df_filtered if trimestre_choisi=="Tous" else df_filtered[df_filtered["Trimestre"]==trimestre_choisi]
 top_natures = df_trim["Nature_plainte"].value_counts().nlargest(top_n).index
-df_line = df_trim[df_trim["Nature_plainte"].isin(top_natures)].groupby(["Mois", "Nature_plainte"]).size().reset_index(name="Nombre")
+df_line = df_trim[df_trim["Nature_plainte"].isin(top_natures)].groupby(["Mois","Nature_plainte"]).size().reset_index(name="Nombre")
 
-fig_line = px.line(
-    df_line, x="Mois", y="Nombre", color="Nature_plainte",
-    markers=True, title=f"Évolution mensuelle des griefs (Top {top_n})",
-    height=400, template="plotly_dark"
-)
+fig_line = px.line(df_line, x="Mois", y="Nombre", color="Nature_plainte", markers=True,
+                   title=f"Évolution mensuelle des griefs (Top {top_n})", height=400, template="plotly_dark")
 fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
 st.plotly_chart(fig_line, use_container_width=True)
 
@@ -234,16 +212,13 @@ st.plotly_chart(fig_line, use_container_width=True)
 # Durée moyenne
 # ============================================================== 
 if "Nb_jour" in df_trim.columns:
-    st.subheader("⏱️ Durée moyenne de traitement")
     df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
-    fig_duree = px.bar(
-        df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
-        title="Durée moyenne de traitement par nature", height=400, template="plotly_dark"
-    )
+    fig_duree = px.bar(df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
+                       title="Durée moyenne de traitement par nature", height=400, template="plotly_dark")
     st.plotly_chart(fig_duree, use_container_width=True)
 
 # ============================================================== 
-# Tableau des données
+# Tableau
 # ============================================================== 
 st.subheader("📋 Aperçu des données")
 st.dataframe(df_filtered.style.background_gradient(cmap="Blues"), use_container_width=True)
