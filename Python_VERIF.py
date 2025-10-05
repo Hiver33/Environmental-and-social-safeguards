@@ -21,7 +21,7 @@ def load_data(path):
         return pd.DataFrame()
 
 # Fichier par défaut
-url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx?rlkey=o33ioc0uz9vvtclyjp9liyk70&st=d01ynu9e&dl=1"
+url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx?rlkey=o33ioc0uz9vvtclyjp9liykc70&st=d01ynu9e&dl=1"
 
 # ============================================================== 
 # Sidebar - Upload dynamique
@@ -89,7 +89,7 @@ if annee_choisie:
     df_filtered = df_filtered[df_filtered['Année'] == annee_choisie]
 
 # ============================================================== 
-# Indicateurs clés
+# Indicateurs clés avec marges et texte sombre
 # ============================================================== 
 st.title("📊 Dashboard Suivi du MGG")
 st.subheader("📌 Indicateurs clés")
@@ -103,23 +103,31 @@ bg_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
 if non_traites > 50:
     bg_colors[3] = "#b30000"
 
+# CSS pour marges/paddings et texte sombre
+st.markdown("""
+<style>
+[data-testid="stMetric"] { border-radius: 15px; padding: 20px; margin:5px; text-align: center; box-shadow: 0px 0px 10px rgba(0,0,0,0.3);}
+[data-testid="stMetricLabel"], [data-testid="stMetricValue"] { color: #111 !important; }
+</style>
+""", unsafe_allow_html=True)
+
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.markdown(f'<div style="background-color:{bg_colors[0]}; padding:15px; border-radius:15px;">'
-                f'<p style="font-size:28px; font-weight:700; color:black;">{total_griefs}</p>'
-                f'<p style="font-size:16px; font-weight:600; color:black;">Total des griefs</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background-color:{bg_colors[0]}; padding:20px; border-radius:15px;">'
+                f'<p style="font-size:28px; font-weight:700; color:#111;">{total_griefs}</p>'
+                f'<p style="font-size:16px; font-weight:600; color:#111;">Total des griefs</p></div>', unsafe_allow_html=True)
 with col2:
-    st.markdown(f'<div style="background-color:{bg_colors[1]}; padding:15px; border-radius:15px;">'
-                f'<p style="font-size:28px; font-weight:700; color:black;">{acheves}</p>'
-                f'<p style="font-size:16px; font-weight:600; color:black;">Achevés</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background-color:{bg_colors[1]}; padding:20px; border-radius:15px;">'
+                f'<p style="font-size:28px; font-weight:700; color:#111;">{acheves}</p>'
+                f'<p style="font-size:16px; font-weight:600; color:#111;">Achevés</p></div>', unsafe_allow_html=True)
 with col3:
-    st.markdown(f'<div style="background-color:{bg_colors[2]}; padding:15px; border-radius:15px;">'
-                f'<p style="font-size:28px; font-weight:700; color:black;">{en_cours}</p>'
-                f'<p style="font-size:16px; font-weight:600; color:black;">En cours</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background-color:{bg_colors[2]}; padding:20px; border-radius:15px;">'
+                f'<p style="font-size:28px; font-weight:700; color:#111;">{en_cours}</p>'
+                f'<p style="font-size:16px; font-weight:600; color:#111;">En cours</p></div>', unsafe_allow_html=True)
 with col4:
-    st.markdown(f'<div style="background-color:{bg_colors[3]}; padding:15px; border-radius:15px;">'
-                f'<p style="font-size:28px; font-weight:700; color:black;">{non_traites}</p>'
-                f'<p style="font-size:16px; font-weight:600; color:black;">Non traités</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background-color:{bg_colors[3]}; padding:20px; border-radius:15px;">'
+                f'<p style="font-size:28px; font-weight:700; color:#111;">{non_traites}</p>'
+                f'<p style="font-size:16px; font-weight:600; color:#111;">Non traités</p></div>', unsafe_allow_html=True)
 
 # ============================================================== 
 # Graphiques Type_depot et Statut
@@ -137,8 +145,7 @@ fig2 = px.pie(
     height=350, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Set2
 )
 fig2.update_traces(marker=dict(line=dict(color='#1a1d21', width=2)),
-                   textinfo='percent+label',
-                   hovertemplate='<b>%{label}</b><br>Nombre: %{value}<br>Pourcentage: %{percent}',
+                   textinfo='percent+label', hovertemplate='<b>%{label}</b><br>Nombre: %{value}<br>Pourcentage: %{percent}',
                    pull=[0.05 if val==df_filtered["Statut_traitement"].value_counts().idxmax() else 0 
                          for val in df_filtered["Statut_traitement"].unique()],
                    textposition='inside')
@@ -164,8 +171,7 @@ st.plotly_chart(fig3, use_container_width=True)
 # Nb griefs par Communauté et Sexe
 # ============================================================== 
 if "Communaute" in df_filtered.columns and not df_filtered["Communaute"].dropna().empty:
-    df_comm = df_filtered.groupby("Communaute").size().reset_index(name="Nombre")
-    df_comm = df_comm.sort_values(by="Nombre", ascending=True)
+    df_comm = df_filtered.groupby("Communaute").size().reset_index(name="Nombre").sort_values(by="Nombre", ascending=True)
     fig_comm = px.bar(df_comm, x="Nombre", y="Communaute", orientation='h',
                       title="Nombre de griefs par Communauté", text="Nombre",
                       template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly)
@@ -213,3 +219,22 @@ if not df_line_top.empty:
         )
         fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
         st.plotly_chart(fig_line, use_container_width=True)
+
+# ============================================================== 
+# Tableau détaillé des griefs
+# ============================================================== 
+st.subheader("📑 Tableau des griefs")
+max_lignes = 10
+hauteur_ligne = 35
+hauteur_tableau = min(len(df_filtered), max_lignes) * hauteur_ligne
+st.dataframe(df_filtered.style.background_gradient(cmap='Blues'), height=hauteur_tableau, use_container_width=True)
+
+# ============================================================== 
+# Style général
+# ============================================================== 
+st.markdown("""
+<style>
+.stApp { background-color: #1a1d21; color: white; }
+h1, h2, h3 { color: #00ccff; }
+</style>
+""", unsafe_allow_html=True)
