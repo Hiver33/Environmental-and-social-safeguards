@@ -199,9 +199,12 @@ fig_cat_sexe = px.bar(
     orientation="h", template="plotly_dark", height=400, text="Nombre",
     color_discrete_sequence=px.colors.qualitative.Plotly
 )
-
-fig_cat_sexe.update_traces(textposition="inside",
-                           xaxis_title = "Nature de grifs", yaxis_title = "Nombre")
+# 🏷️ Renommage des axes
+    fig_cat_sexe.update_layout(
+        xaxis_title="Nombre",
+        yaxis_title="Nature de griefs"
+    )
+fig_cat_sexe.update_traces(textposition="inside")
 st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
 # Evolution Top N
