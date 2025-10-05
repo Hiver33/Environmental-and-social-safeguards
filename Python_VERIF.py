@@ -179,7 +179,7 @@ st.subheader("🏘️ Répartition des griefs par communauté et par sexe")
 
 col_c1, col_c2 = st.columns(2 if not plein_ecran else 1)
 
-# --- Nb de griefs par communauté ---
+# Nb de griefs par communauté
 ordre_comm = df_filtered["Communaute"].value_counts().sort_values(ascending=True)
 fig_comm = px.bar(
     x=ordre_comm.index, y=ordre_comm.values,
@@ -189,20 +189,15 @@ fig_comm = px.bar(
     height=400, template="plotly_dark"
 )
 
-# --- Répartition par sexe ---
-if "Sexe" in df_filtered.columns:
-    fig_sexe = px.pie(
-        df_filtered, names="Sexe", title="Répartition des griefs par sexe",
-        height=400, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly
-    )
-    fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
+# Répartition par sexe
+fig_sexe = px.pie(
+    df_filtered, names="Sexe", title="Répartition des griefs par sexe",
+    height=400, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly
+)
+fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
 
 with col_c1: st.plotly_chart(fig_comm, use_container_width=True)
-with col_c2:
-    if "Sexe" in df_filtered.columns:
-        st.plotly_chart(fig_sexe, use_container_width=True)
-    else:
-        st.info("⚠️ Pas de colonne 'Sexe' disponible dans le fichier.")
+with col_c2: st.plotly_chart(fig_sexe, use_container_width=True)
 
 # ============================================================== 
 # Graphique ligne : évolution temporelle (Top N)
@@ -236,6 +231,18 @@ if "Nb_jour" in df_trim.columns:
         title="Durée moyenne de traitement par nature", height=400, template="plotly_dark"
     )
     st.plotly_chart(fig_duree, use_container_width=True)
+
+# ============================================================== 
+# Graphique : Nature des griefs par sexe
+# ============================================================== 
+st.subheader("👥 Nature des griefs par sexe")
+df_cat_sexe = df_trim.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre")
+fig_cat_sexe = px.bar(
+    df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe", orientation="h",
+    title="Nature des griefs par sexe", template="plotly_dark",
+    color_discrete_sequence=px.colors.qualitative.Plotly, height=400
+)
+st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
 # ============================================================== 
 # Tableau des données
