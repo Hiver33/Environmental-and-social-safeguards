@@ -27,12 +27,7 @@ url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx
 # ============================================================== 
 st.sidebar.markdown("### 🗃️ Charger un fichier Excel")
 uploaded_file = st.sidebar.file_uploader("Choisir un fichier Excel (.xlsx)", type=["xlsx"])
-
-if uploaded_file is not None:
-    df = load_data(uploaded_file)
-else:
-    st.sidebar.info("Aucune source importée. Utilisation du fichier par défaut.")
-    df = load_data(url_excel)
+df = load_data(uploaded_file if uploaded_file else url_excel)
 
 # Colonnes attendues
 colonnes_attendues = [
@@ -40,7 +35,9 @@ colonnes_attendues = [
     "Categorie","Date_reception","Nb_jour","Communaute","Sexe"
 ]
 
+# Vérification des colonnes
 if df.empty:
+    st.error("❌ Le fichier Excel est vide.")
     st.stop()
 if not all(col in df.columns for col in colonnes_attendues):
     st.error("⚠️ Le fichier ne contient pas toutes les colonnes attendues.")
@@ -50,13 +47,13 @@ if not all(col in df.columns for col in colonnes_attendues):
 # Préparation des données
 # ============================================================== 
 df["Date_reception"] = pd.to_datetime(df["Date_reception"], errors='coerce', dayfirst=True)
-df = df.dropna(subset=["Date_reception"])  # enlever lignes sans date valide
+df = df.dropna(subset=["Date_reception"])
 df["Année"] = df["Date_reception"].dt.year
 df["Trimestre"] = df["Date_reception"].dt.to_period("Q").astype(str)
 df["Mois"] = df["Date_reception"].dt.to_period("M").dt.to_timestamp()
 
 # ============================================================== 
-# Filtres dans la sidebar
+# Filtres sidebar
 # ============================================================== 
 st.sidebar.header("Filtres")
 annee_courante = datetime.now().year
@@ -76,20 +73,18 @@ Statuts = st.sidebar.multiselect(
     default=df["Statut_traitement"].dropna().unique()
 )
 
-# Option plein écran
 plein_ecran = st.sidebar.toggle("🖥️ Activer le mode Plein Écran (paysage)")
 
-# Filtrage
+# Filtrage principal
 df_filtered = df[df["Type_depot"].isin(Types) & df["Statut_traitement"].isin(Statuts)]
 if annee_choisie:
     df_filtered = df_filtered[df_filtered["Année"] == annee_choisie]
-
 if df_filtered.empty:
-    st.warning("Aucune donnée après filtrage.")
+    st.warning("⚠️ Aucun enregistrement après filtrage.")
     st.stop()
 
 # ============================================================== 
-# Thème visuel & style
+# Thème visuel
 # ============================================================== 
 page_width = "95%" if plein_ecran else "80%"
 font_size = "18px" if plein_ecran else "16px"
@@ -122,48 +117,47 @@ en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
 non_traites = len(df_filtered[df_filtered["Statut_traitement"]=="Non traité"])
 
 bg_colors = ["#00ccff","#90ee90","#ffcc00","#ff6666"]  # vert clair pour achevé
-col1,col2,col3,col4 = st.columns(4)
-
+cols = st.columns(4)
 indicateurs = [
-    (col1,bg_colors[0],total_griefs,"Total des griefs"),
-    (col2,bg_colors[1],acheves,"Achevés"),
-    (col3,bg_colors[2],en_cours,"En cours"),
-    (col4,bg_colors[3],non_traites,"Non traités")
+    (cols[0],bg_colors[0],total_griefs,"Total des griefs"),
+    (cols[1],bg_colors[1],acheves,"Achevés"),
+    (cols[2],bg_colors[2],en_cours,"En cours"),
+    (cols[3],bg_colors[3],non_traites,"Non traités")
 ]
 
-for col,color,value,label in indicateurs:
+for col,color,val,label in indicateurs:
     col.markdown(f"""
     <div style="background-color:{color}; padding:15px; border-radius:15px;">
-        <p style="font-size:28px; font-weight:700; color:black;">{value}</p>
+        <p style="font-size:28px; font-weight:700; color:black;">{val}</p>
         <p style="font-size:16px; font-weight:600; color:black;">{label}</p>
     </div>
-    """,unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # ============================================================== 
 # Graphiques principaux
 # ============================================================== 
 st.subheader("📈 Analyse visuelle")
 
-# Type dépôt
-ordre_type = df_filtered.groupby("Type_depot").size().reset_index(name="Nombre").sort_values(by="Nombre",ascending=True)
-fig1 = px.bar(ordre_type,x="Type_depot",y="Nombre",text="Nombre",title="Répartition des plaintes par type de dépôt",height=400,template="plotly_dark")
+# Répartition par type de dépôt
+ordre_type = df_filtered.groupby("Type_depot").size().reset_index(name="Nombre").sort_values("Nombre",ascending=True)
+fig_type = px.bar(ordre_type,x="Type_depot",y="Nombre",text="Nombre",title="Répartition des plaintes par type de dépôt",height=400,template="plotly_dark")
 
-# Avancement des statuts avec "Achevé" toujours en vert clair
-statut_counts = df_filtered["Statut_traitement"].value_counts()
-statut_colors = {stat:"#90ee90" if stat=="Achevé" else "#636efa" for stat in statut_counts.index}
-fig2 = px.pie(df_filtered,names="Statut_traitement",values=df_filtered.groupby("Statut_traitement").size().reindex(statut_counts.index),title="Avancement général des griefs",height=400,template="plotly_dark",color="Statut_traitement",color_discrete_map=statut_colors)
-fig2.update_traces(textinfo="percent+label",textposition="inside")
+# Avancement statuts avec "Achevé" vert clair
+stat_counts = df_filtered["Statut_traitement"].value_counts()
+color_map = {stat:"#90ee90" if stat=="Achevé" else "#636efa" for stat in stat_counts.index}
+fig_stat = px.pie(df_filtered,names="Statut_traitement",values=df_filtered.groupby("Statut_traitement").size().reindex(stat_counts.index),title="Avancement général des griefs",height=400,template="plotly_dark",color="Statut_traitement",color_discrete_map=color_map)
+fig_stat.update_traces(textinfo="percent+label",textposition="inside")
 
 c1,c2 = st.columns(2 if not plein_ecran else 1)
-with c1: st.plotly_chart(fig1,use_container_width=True)
-with c2: st.plotly_chart(fig2,use_container_width=True)
+with c1: st.plotly_chart(fig_type,use_container_width=True)
+with c2: st.plotly_chart(fig_stat,use_container_width=True)
 
 # Histogramme par Nature
 ordre_nature = df_filtered["Nature_plainte"].value_counts().index.tolist()
-fig3 = px.histogram(df_filtered,y="Nature_plainte",color="Statut_traitement",text_auto=True,category_orders={"Nature_plainte":ordre_nature},orientation="h",height=400,template="plotly_dark")
-st.plotly_chart(fig3,use_container_width=True)
+fig_nature = px.histogram(df_filtered,y="Nature_plainte",color="Statut_traitement",text_auto=True,category_orders={"Nature_plainte":ordre_nature},orientation="h",height=400,template="plotly_dark")
+st.plotly_chart(fig_nature,use_container_width=True)
 
-# Répartition par communauté et sexe
+# Répartition par communauté et par sexe
 st.subheader("🏘️ Répartition des griefs par communauté et par sexe")
 col_c1,col_c2 = st.columns(2 if not plein_ecran else 1)
 
@@ -199,10 +193,10 @@ st.plotly_chart(fig_line,use_container_width=True)
 # Durée moyenne de traitement
 if "Nb_jour" in df_trim.columns:
     st.subheader("⏱️ Durée moyenne de traitement")
-    df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values(by="Nb_jour")
+    df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
     fig_duree = px.bar(df_duree,x="Nature_plainte",y="Nb_jour",text_auto=".1f",title="Durée moyenne de traitement par nature",height=400,template="plotly_dark")
     st.plotly_chart(fig_duree,use_container_width=True)
 
-# Tableau final des données
+# Tableau final
 st.subheader("📋 Aperçu des données")
 st.dataframe(df_filtered.style.background_gradient(cmap="Blues"),use_container_width=True)
