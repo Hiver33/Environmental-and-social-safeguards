@@ -102,7 +102,8 @@ st.subheader("📈 Analyse visuelle")
 type_counts = df_filtered["Type_depot"].value_counts().sort_values()
 fig_type = px.bar(
     x=type_counts.index, y=type_counts.values, text=type_counts.values,
-    title="Répartition par type de dépôt", template="plotly_dark", height=400
+    title="Répartition par type de dépôt", template="plotly_dark", height=400,
+    x_label = "Type de dépôt", y_label = "Nombre"
 )
 
 # Avancement général avec couleurs fixes
@@ -135,7 +136,8 @@ ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.
 fig_nature = px.histogram(
     df_filtered, y="Nature_plainte", color="Statut_traitement", text_auto=True,
     category_orders={"Nature_plainte": ordre_nature}, orientation="h",
-    title = "Nombre de griefs par nature", template="plotly_dark", height=400, color_discrete_map=colors_map_statut
+    title = "Nombre de griefs par nature", template="plotly_dark", height=400, color_discrete_map=colors_map_statut,
+    x_label = "Nombre", y_label = "Nature du grief"
 )
 st.plotly_chart(fig_nature, use_container_width=True)
 
@@ -147,6 +149,7 @@ if plein_ecran:
         y=df_filtered["Communaute"].value_counts().sort_values().values,
         text=df_filtered["Communaute"].value_counts().sort_values().values,
         title="Nombre de griefs par communauté", template="plotly_dark", height=400
+        x_label = "Village/localité", y_label = "Nombre"
     )
     st.plotly_chart(fig_comm, use_container_width=True)
 
@@ -162,6 +165,7 @@ else:
         y=df_filtered["Communaute"].value_counts().sort_values().values,
         text=df_filtered["Communaute"].value_counts().sort_values().values,
         title="Nombre de griefs par communauté", template="plotly_dark", height=400
+        x_label = "Village/localité", y_label = "Nombre"
     )
     fig_sexe = px.pie(
         df_filtered, names="Sexe", title="Répartition par sexe", template="plotly_dark", height=400
@@ -179,6 +183,7 @@ fig_cat_sexe = px.bar(
     category_orders={"Nature_plainte": ordre_nature_tri},
     orientation="h", template="plotly_dark", height=400, text="Nombre",
     color_discrete_sequence=px.colors.qualitative.Plotly
+    y_label = "Nature du grief"
 )
 fig_cat_sexe.update_traces(textposition="inside")
 st.plotly_chart(fig_cat_sexe, use_container_width=True)
@@ -203,7 +208,8 @@ if "Nb_jour" in df_trim.columns:
     df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
     fig_duree = px.bar(
         df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
-        title="Durée moyenne par nature", template="plotly_dark", height=400
+        title="Durée moyenne de traitement par nature", template="plotly_dark", height=400,
+        x_label = "Nature du grief", y_label = "Durée (Nb jours)"
     )
     st.plotly_chart(fig_duree, use_container_width=True)
 
