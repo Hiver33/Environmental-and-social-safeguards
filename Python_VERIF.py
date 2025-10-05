@@ -84,13 +84,17 @@ st.subheader("📈 Analyse visuelle")
 type_counts = df_filtered["Type_depot"].value_counts().sort_values()
 fig_type = px.bar(x=type_counts.index, y=type_counts.values, text=type_counts.values,
                   title="Répartition par type de dépôt", template="plotly_dark", height=400)
-# Avancement général (vert pour Achevé)
-colors_map = {
-    "Achevé": "#90ee90",
-    "Grief non récevable": "#00ccff",
-    "En cours": "#ffcc00",
-    "Non traité": "#ff6666"
-}
+
+# Avancement général (couleurs harmonisées)
+all_status = df_filtered["Statut_traitement_clean"].unique()
+theme_colors = px.colors.qualitative.Dark24  # Palette cohérente
+colors_map = {}
+for i, status in enumerate(all_status):
+    if status == "Achevé":
+        colors_map[status] = "#90ee90"  # Vert clair thème
+    else:
+        colors_map[status] = theme_colors[i % len(theme_colors)]
+
 fig_stat = px.pie(df_filtered, names="Statut_traitement_clean", title="Avancement général des griefs",
                   color="Statut_traitement_clean", color_discrete_map=colors_map,
                   template="plotly_dark", height=400)
@@ -104,7 +108,8 @@ c2.plotly_chart(fig_stat, use_container_width=True)
 ordre_nature = df_filtered["Nature_plainte"].value_counts().index.tolist()
 fig_nature = px.histogram(df_filtered, y="Nature_plainte", color="Statut_traitement_clean", text_auto=True,
                           category_orders={"Nature_plainte": ordre_nature}, orientation="h",
-                          template="plotly_dark", height=400)
+                          template="plotly_dark", height=400,
+                          color_discrete_map=colors_map)
 st.plotly_chart(fig_nature, use_container_width=True)
 
 # Répartition Communauté / Sexe
@@ -113,6 +118,7 @@ c1, c2 = st.columns(2 if not plein_ecran else 1)
 comm_counts = df_filtered["Communaute"].value_counts().sort_values()
 fig_comm = px.bar(x=comm_counts.index, y=comm_counts.values, text=comm_counts.values,
                   title="Nombre de griefs par communauté", template="plotly_dark", height=400)
+fig_comm.update_traces(marker_color="#00ccff")
 fig_sexe = px.pie(df_filtered, names="Sexe", title="Répartition par sexe", template="plotly_dark", height=400)
 fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
 c1.plotly_chart(fig_comm, use_container_width=True)
