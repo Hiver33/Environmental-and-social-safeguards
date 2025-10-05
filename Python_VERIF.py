@@ -89,7 +89,7 @@ if annee_choisie:
     df_filtered = df_filtered[df_filtered['Année'] == annee_choisie]
 
 # ============================================================== 
-# Indicateurs clés
+# Indicateurs clés avec fond coloré et texte blanc
 # ============================================================== 
 st.title("📊 Dashboard Suivi du MGG")
 st.subheader("📌 Indicateurs clés")
@@ -161,7 +161,7 @@ fig3 = px.histogram(
 st.plotly_chart(fig3, use_container_width=True)
 
 # ============================================================== 
-# Nb griefs par Communauté et Sexe
+# Graphique Nb de griefs par Communaute et répartition Sexe
 # ============================================================== 
 if "Communaute" in df_filtered.columns and not df_filtered["Communaute"].dropna().empty:
     df_comm = df_filtered.groupby("Communaute").size().reset_index(name="Nombre")
@@ -191,7 +191,7 @@ if "Nature_plainte" in df_filtered.columns and "Sexe" in df_filtered.columns:
         st.plotly_chart(fig_ns, use_container_width=True)
 
 # ============================================================== 
-# Filtre Trimestre et Top N
+# Filtre Trimestre avant graphique évolution
 # ============================================================== 
 trimestre_disponibles = sorted(df_filtered['Trimestre'].unique())
 trimestre_choisie = st.selectbox("Choisir un trimestre :", ["Tous"] + trimestre_disponibles)
@@ -200,6 +200,9 @@ if trimestre_choisie != "Tous":
 else:
     df_trim = df_filtered
 
+# ============================================================== 
+# Graphique évolution temporelle Top N natures
+# ============================================================== 
 top_n = st.sidebar.slider("Top N Natures", min_value=1, max_value=10, value=3)
 top_natures = df_trim['Nature_plainte'].value_counts().nlargest(top_n).index.tolist()
 df_line_top = df_trim[df_trim['Nature_plainte'].isin(top_natures)]
@@ -209,7 +212,3 @@ if not df_line_top.empty:
         fig_line = px.line(
             df_grief, x="Mois", y="Nombre_Griefs", color="Nature_plainte",
             markers=True, title=f"Évolution mensuelle des griefs (Top {top_n} natures) - {annee_choisie}",
-            height=400, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly
-        )
-        fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
-        st.plotly_chart(fig_line, use_container_width=True)
