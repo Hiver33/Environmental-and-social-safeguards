@@ -102,10 +102,13 @@ st.subheader("📈 Analyse visuelle")
 type_counts = df_filtered["Type_depot"].value_counts().sort_values()
 fig_type = px.bar(
     x=type_counts.index, y=type_counts.values, text=type_counts.values,
-    title="Répartition par type de dépôt", template="plotly_dark", height=400,
-    x = "Type de dépôt", y = "Nombre"
+    title="Répartition par type de dépôt", template="plotly_dark", height=400
 )
-
+# 🏷️ Renommage des axes
+fig_type.update_layout(
+    xaxis_title="Type de dépôt",
+    yaxis_title="Nombre de griefs"
+)
 # Avancement général avec couleurs fixes
 colors_map_statut = {
     "Achevé": "#00ff99",
@@ -136,8 +139,12 @@ ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.
 fig_nature = px.histogram(
     df_filtered, y="Nature_plainte", color="Statut_traitement", text_auto=True,
     category_orders={"Nature_plainte": ordre_nature}, orientation="h",
-    title = "Nombre de griefs par nature", template="plotly_dark", height=400, color_discrete_map=colors_map_statut,
-    x_label = "Nombre", y_label = "Nature du grief"
+    title = "Nombre de griefs par nature", template="plotly_dark", height=400, color_discrete_map=colors_map_statut
+)
+# 🏷️ Renommage des axes
+fig_nature.update_layout(
+    xaxis_title="Nature de griefs",
+    yaxis_title="Nombre"
 )
 st.plotly_chart(fig_nature, use_container_width=True)
 
@@ -148,8 +155,12 @@ if plein_ecran:
         x=df_filtered["Communaute"].value_counts().sort_values().index,
         y=df_filtered["Communaute"].value_counts().sort_values().values,
         text=df_filtered["Communaute"].value_counts().sort_values().values,
-        title="Nombre de griefs par communauté", template="plotly_dark", height=400,
-        x_label = "Village/localité", y_label = "Nombre"
+        title="Nombre de griefs par communauté", template="plotly_dark", height=400
+    )
+    # 🏷️ Renommage des axes
+    fig_comm.update_layout(
+        xaxis_title="Village/Localité",
+        yaxis_title="Nombre de griefs"
     )
     st.plotly_chart(fig_comm, use_container_width=True)
 
@@ -164,8 +175,12 @@ else:
         x=df_filtered["Communaute"].value_counts().sort_values().index,
         y=df_filtered["Communaute"].value_counts().sort_values().values,
         text=df_filtered["Communaute"].value_counts().sort_values().values,
-        title="Nombre de griefs par communauté", template="plotly_dark", height=400,
-        x_label = "Village/localité", y_label = "Nombre"
+        title="Nombre de griefs par communauté", template="plotly_dark", height=400
+    )
+    # 🏷️ Renommage des axes
+    fig_comm.update_layout(
+        xaxis_title="Village/Localité",
+        yaxis_title="Nombre de griefs"
     )
     fig_sexe = px.pie(
         df_filtered, names="Sexe", title="Répartition par sexe", template="plotly_dark", height=400
@@ -182,9 +197,14 @@ fig_cat_sexe = px.bar(
     df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe",
     category_orders={"Nature_plainte": ordre_nature_tri},
     orientation="h", template="plotly_dark", height=400, text="Nombre",
-    color_discrete_sequence=px.colors.qualitative.Plotly,
-    y_label = "Nature du grief"
+    color_discrete_sequence=px.colors.qualitative.Plotly
 )
+
+# 🏷️ Renommage des axes
+    fig_cat_sexe.update_layout(
+        xaxis_title="Nature de griefs",
+        yaxis_title="Nombre"
+    )
 fig_cat_sexe.update_traces(textposition="inside")
 st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
@@ -208,8 +228,12 @@ if "Nb_jour" in df_trim.columns:
     df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
     fig_duree = px.bar(
         df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
-        title="Durée moyenne de traitement par nature", template="plotly_dark", height=400,
-        x_label = "Nature du grief", y_label = "Durée (Nb jours)"
+        title="Durée moyenne de traitement par nature", template="plotly_dark", height=400
+    )
+    # 🏷️ Renommage des axes
+    fig_duree.update_layout(
+        xaxis_title="Nature de griefs",
+        yaxis_title="Durée (Nb de jours)"
     )
     st.plotly_chart(fig_duree, use_container_width=True)
 
