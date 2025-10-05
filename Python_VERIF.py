@@ -147,10 +147,17 @@ fig1 = px.bar(
     height=400, template="plotly_dark"
 )
 
-# Avancement général
+# Avancement général avec couleur personnalisée
+color_map = {
+    "Achevé": "#00ff99",                 # vert clair
+    "Grief non récevable": "#636efa",    # bleu
+    "En cours": "#ffcc00",               # jaune
+    "Non traité": "#ff6666"              # rouge
+}
 fig2 = px.pie(
     df_filtered, names="Statut_traitement", title="Avancement général des griefs",
-    height=400, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Set2
+    height=400, template="plotly_dark", color="Statut_traitement",
+    color_discrete_map=color_map
 )
 fig2.update_traces(textinfo="percent+label", textposition="inside")
 
