@@ -148,7 +148,7 @@ if plein_ecran:
         x=df_filtered["Communaute"].value_counts().sort_values().index,
         y=df_filtered["Communaute"].value_counts().sort_values().values,
         text=df_filtered["Communaute"].value_counts().sort_values().values,
-        title="Nombre de griefs par communauté", template="plotly_dark", height=400
+        title="Nombre de griefs par communauté", template="plotly_dark", height=400,
         x_label = "Village/localité", y_label = "Nombre"
     )
     st.plotly_chart(fig_comm, use_container_width=True)
@@ -164,7 +164,7 @@ else:
         x=df_filtered["Communaute"].value_counts().sort_values().index,
         y=df_filtered["Communaute"].value_counts().sort_values().values,
         text=df_filtered["Communaute"].value_counts().sort_values().values,
-        title="Nombre de griefs par communauté", template="plotly_dark", height=400
+        title="Nombre de griefs par communauté", template="plotly_dark", height=400,
         x_label = "Village/localité", y_label = "Nombre"
     )
     fig_sexe = px.pie(
@@ -182,7 +182,7 @@ fig_cat_sexe = px.bar(
     df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe",
     category_orders={"Nature_plainte": ordre_nature_tri},
     orientation="h", template="plotly_dark", height=400, text="Nombre",
-    color_discrete_sequence=px.colors.qualitative.Plotly
+    color_discrete_sequence=px.colors.qualitative.Plotly,
     y_label = "Nature du grief"
 )
 fig_cat_sexe.update_traces(textposition="inside")
