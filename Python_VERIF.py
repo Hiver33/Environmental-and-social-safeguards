@@ -1,9 +1,18 @@
+#****************** Projet GriefPy ********************************
+#     Dashboard interactif pour la visualisation des indicateurs
+#******************************************************************
+
+#==================================================================
+# ------------------ Chargement des bibliothèques -----------------
+#==================================================================
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
 
+#=================================================================
 # -------------------- Chargement des données --------------------
+#=================================================================
 @st.cache_data(ttl=300)
 def load_data(path):
     try:
@@ -17,7 +26,9 @@ url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx
 uploaded_file = st.sidebar.file_uploader("Choisir un fichier Excel (.xlsx)", type=["xlsx"])
 df = load_data(uploaded_file if uploaded_file else url_excel)
 
+#====================================================================
 # -------------------- Vérification des colonnes --------------------
+#====================================================================
 cols_req = ["Type_depot","Statut_traitement","Nature_plainte","Categorie","Date_reception","Nb_jour","Communaute","Sexe"]
 if df.empty or not all(col in df.columns for col in cols_req):
     st.stop()
@@ -29,7 +40,9 @@ df["Année"] = df["Date_reception"].dt.year
 df["Trimestre"] = df["Date_reception"].dt.to_period("Q").astype(str)
 df["Mois"] = df["Date_reception"].dt.to_period("M").dt.to_timestamp()
 
-# -------------------- Filtres --------------------
+#====================================================================
+# --------------------------- Filtrees ------------------------------
+#====================================================================
 st.sidebar.header("Filtres")
 annee_courante = datetime.now().year
 annees_dispo = sorted(df["Année"].unique())
@@ -48,8 +61,10 @@ if annee_choisie:
 if df_filtered.empty:
     st.warning("Aucun enregistrement après filtrage")
     st.stop()
-
-# -------------------- Thème --------------------
+    
+#====================================================================
+# ----------------------------- Thème -------------------------------
+#====================================================================
 page_width = "100%" if plein_ecran else "80%"
 st.markdown(f"""
 <style>
@@ -58,7 +73,9 @@ h1,h2,h3{{color:#00ccff;}}
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------- Indicateurs --------------------
+#====================================================================
+# -------------------------- Indicateurs ----------------------------
+#====================================================================
 st.title("📊 Dashboard Suivi du MGG")
 total = len(df_filtered)
 acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non récevable"])])
@@ -76,7 +93,9 @@ for col,(val,label),color in zip(cols,metrics,colors):
         </div>
     """, unsafe_allow_html=True)
 
-# -------------------- Graphiques principaux --------------------
+#====================================================================
+# --------------------- Graphiques principaux -----------------------
+#====================================================================
 st.subheader("📈 Analyse visuelle")
 
 # Répartition par type
