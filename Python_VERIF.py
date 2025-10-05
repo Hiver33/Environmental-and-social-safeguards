@@ -226,6 +226,9 @@ fig_line = px.line(
     df_line, x="Mois", y="Nombre", color="Nature_plainte", markers=True,
     title=f"Top {top_n} évolution", template="plotly_dark", height=400
 )
+fig_duree.update_layout(
+        legend_title_text = "Nature de griefs"
+    )
 fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
 st.plotly_chart(fig_line, use_container_width=True)
 
