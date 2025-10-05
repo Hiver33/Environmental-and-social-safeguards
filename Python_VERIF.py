@@ -103,7 +103,7 @@ type_counts = df_filtered["Type_depot"].value_counts().sort_values()
 fig_type = px.bar(
     x=type_counts.index, y=type_counts.values, text=type_counts.values,
     title="Répartition par type de dépôt", template="plotly_dark", height=400,
-    x_label = "Type de dépôt", y_label = "Nombre"
+    x = "Type de dépôt", y = "Nombre"
 )
 
 # Avancement général avec couleurs fixes
