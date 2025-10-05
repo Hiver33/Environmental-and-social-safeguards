@@ -1,5 +1,5 @@
 ## *************** Script Python Dashboard ***************
-##        Projet PyDashboard – Version Plein Écran Responsive
+##        Projet PyDashboard – Version Plein Écran Responsive Optimisée
 ## *******************************************************
 
 import streamlit as st
@@ -19,7 +19,6 @@ def load_data(path):
         st.error(f"❌ Impossible de charger le fichier Excel : {e}")
         return pd.DataFrame()
 
-# Fichier par défaut
 url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx?rlkey=o33ioc0uz9vvtclyjp9liyk70&st=d01ynu9e&dl=1"
 
 # ============================================================== 
@@ -34,15 +33,12 @@ else:
     st.sidebar.info("Aucune source importée. Utilisation du fichier par défaut.")
     df = load_data(url_excel)
 
-# Colonnes attendues
 colonnes_attendues = [
     "Type_depot", "Statut_traitement", "Nature_plainte",
     "Categorie", "Date_reception", "Nb_jour", "Communaute", "Sexe"
 ]
-if df.empty:
-    st.stop()
-if not all(col in df.columns for col in colonnes_attendues):
-    st.error("⚠️ Le fichier ne contient pas toutes les colonnes attendues.")
+if df.empty or not all(col in df.columns for col in colonnes_attendues):
+    st.error("⚠️ Le fichier ne contient pas toutes les colonnes attendues ou est vide.")
     st.stop()
 
 # ============================================================== 
@@ -54,7 +50,7 @@ df["Trimestre"] = df["Date_reception"].dt.to_period("Q").astype(str)
 df["Mois"] = df["Date_reception"].dt.to_period("M").dt.to_timestamp()
 
 # ============================================================== 
-# Filtres dans la sidebar
+# Filtres
 # ============================================================== 
 st.sidebar.header("Filtres")
 annee_courante = datetime.now().year
@@ -64,6 +60,7 @@ annee_choisie = st.sidebar.selectbox(
     annees_disponibles, 
     index=annees_disponibles.index(annee_courante) if annee_courante in annees_disponibles else 0
 )
+
 Types = st.sidebar.multiselect(
     "📂 Type de dépôt :", df["Type_depot"].dropna().unique(),
     default=df["Type_depot"].dropna().unique()
@@ -73,19 +70,18 @@ Statuts = st.sidebar.multiselect(
     default=df["Statut_traitement"].dropna().unique()
 )
 
-# Option plein écran
-plein_ecran = st.sidebar.toggle("🖥️ Activer le mode Plein Écran (paysage)")
+plein_ecran = st.sidebar.toggle("🖥️ Mode Plein Écran")
 
-# Filtrage
 df_filtered = df[df["Type_depot"].isin(Types) & df["Statut_traitement"].isin(Statuts)]
 if annee_choisie:
     df_filtered = df_filtered[df_filtered["Année"] == annee_choisie]
 
 # ============================================================== 
-# Thème visuel & style
+# Style global responsive
 # ============================================================== 
-page_width = "95%" if plein_ecran else "80%"
+page_width = "100%" if plein_ecran else "95%"
 font_size = "18px" if plein_ecran else "16px"
+margin = "20px" if not plein_ecran else "5px"
 
 st.markdown(f"""
 <style>
@@ -93,7 +89,9 @@ st.markdown(f"""
     background-color: #1a1d21;
     color: white;
     max-width: {page_width};
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
+    padding: {margin};
 }}
 [data-testid="stMetric"] {{
     border-radius: 15px;
@@ -115,24 +113,18 @@ en_cours = len(df_filtered[df_filtered["Statut_traitement"] == "En cours"])
 non_traites = len(df_filtered[df_filtered["Statut_traitement"] == "Non traité"])
 
 bg_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
-col1, col2, col3, col4 = st.columns(4)
-
-indicateurs = [
-    (col1, bg_colors[0], total_griefs, "Total des griefs"),
-    (col2, bg_colors[1], acheves, "Achevés"),
-    (col3, bg_colors[2], en_cours, "En cours"),
-    (col4, bg_colors[3], non_traites, "Non traités"),
-]
+cols = st.columns(4)
+indicateurs = [(cols[i], bg_colors[i], v, l) for i, (v,l) in enumerate([
+    (total_griefs,"Total des griefs"), (acheves,"Achevés"), 
+    (en_cours,"En cours"), (non_traites,"Non traités")
+])]
 for col, color, value, label in indicateurs:
-    col.markdown(
-        f"""
+    col.markdown(f"""
         <div style="background-color:{color}; padding:15px; border-radius:15px;">
             <p style="font-size:28px; font-weight:700; color:black;">{value}</p>
             <p style="font-size:16px; font-weight:600; color:black;">{label}</p>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    """, unsafe_allow_html=True)
 
 # ============================================================== 
 # Graphiques principaux
@@ -140,14 +132,14 @@ for col, color, value, label in indicateurs:
 st.subheader("📈 Analyse visuelle")
 
 # Répartition par type de dépôt
-ordre_type = df_filtered.groupby("Type_depot").size().reset_index(name="Nombre").sort_values(by="Nombre", ascending=True)
+ordre_type = df_filtered.groupby("Type_depot").size().reset_index(name="Nombre").sort_values("Nombre", ascending=True)
 fig1 = px.bar(
     ordre_type, x="Type_depot", y="Nombre", text="Nombre",
     title="Répartition des plaintes par type de dépôt",
     height=400, template="plotly_dark"
 )
 
-# Avancement général avec couleur personnalisée
+# Avancement général avec couleur fixe pour "Achevé"
 color_map = {
     "Achevé": "#00ff99",                 # vert clair
     "Grief non récevable": "#636efa",    # bleu
@@ -155,9 +147,10 @@ color_map = {
     "Non traité": "#ff6666"              # rouge
 }
 fig2 = px.pie(
-    df_filtered, names="Statut_traitement", title="Avancement général des griefs",
-    height=400, template="plotly_dark", color="Statut_traitement",
-    color_discrete_map=color_map
+    df_filtered, names="Statut_traitement",
+    title="Avancement général des griefs",
+    height=400, template="plotly_dark",
+    color="Statut_traitement", color_discrete_map=color_map
 )
 fig2.update_traces(textinfo="percent+label", textposition="inside")
 
@@ -202,12 +195,11 @@ with col_c1: st.plotly_chart(fig_comm, use_container_width=True)
 with col_c2: st.plotly_chart(fig_sexe, use_container_width=True)
 
 # ============================================================== 
-# Graphique : Nature des griefs par sexe (tri croissant)
+# Graphique Nature des griefs par sexe (tri croissant)
 # ============================================================== 
 st.subheader("👥 Nature des griefs par sexe")
 df_cat_sexe = df_filtered.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre")
-ordre_nature_tri = df_cat_sexe.groupby("Nature_plainte")["Nombre"].sum().sort_values(ascending=True).index.tolist()
-
+ordre_nature_tri = df_cat_sexe.groupby("Nature_plainte")["Nombre"].sum().sort_values().index.tolist()
 fig_cat_sexe = px.bar(
     df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe",
     category_orders={"Nature_plainte": ordre_nature_tri},
@@ -243,7 +235,7 @@ st.plotly_chart(fig_line, use_container_width=True)
 # ============================================================== 
 if "Nb_jour" in df_trim.columns:
     st.subheader("⏱️ Durée moyenne de traitement")
-    df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values(by="Nb_jour")
+    df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
     fig_duree = px.bar(
         df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
         title="Durée moyenne de traitement par nature", height=400, template="plotly_dark"
