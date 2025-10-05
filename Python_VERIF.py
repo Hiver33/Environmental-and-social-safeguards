@@ -1,6 +1,6 @@
-## *************** Script Python Dashboard ***************
+## *************** Script Python Dashboard ******************************
 ##        Projet PyDashboard – Version Plein Écran Responsive
-## *******************************************************
+## **********************************************************************
 
 import streamlit as st
 import pandas as pd
@@ -37,7 +37,7 @@ else:
 # Vérification des colonnes essentielles
 colonnes_attendues = [
     "Type_depot", "Statut_traitement", "Nature_plainte",
-    "Categorie", "Date_reception", "Nb_jour", "Localite"
+    "Categorie", "Date_reception", "Nb_jour", "Communaute", "Sexe"
 ]
 if df.empty:
     st.stop()
@@ -173,19 +173,36 @@ fig3 = px.histogram(
 st.plotly_chart(fig3, use_container_width=True)
 
 # ============================================================== 
-# Graphique par village
+# Graphiques par Communauté et par Sexe
 # ============================================================== 
-if "Localite" in df_filtered.columns:
-    st.subheader("🏘️ Répartition des griefs par village")
-    ordre_village = df_filtered["Localite"].value_counts().sort_values(ascending=True)
-    fig_village = px.bar(
-        x=ordre_village.index, y=ordre_village.values,
-        labels={"x": "Village", "y": "Nombre de griefs"},
-        text=ordre_village.values,
-        title="Répartition des griefs par villages",
-        height=400, template="plotly_dark"
+st.subheader("🏘️ Répartition des griefs par communauté et par sexe")
+
+col_c1, col_c2 = st.columns(2 if not plein_ecran else 1)
+
+# --- Nb de griefs par communauté ---
+ordre_comm = df_filtered["Communaute"].value_counts().sort_values(ascending=True)
+fig_comm = px.bar(
+    x=ordre_comm.index, y=ordre_comm.values,
+    labels={"x": "Communauté", "y": "Nombre de griefs"},
+    text=ordre_comm.values,
+    title="Nombre de griefs par communauté",
+    height=400, template="plotly_dark"
+)
+
+# --- Répartition par sexe ---
+if "Sexe" in df_filtered.columns:
+    fig_sexe = px.pie(
+        df_filtered, names="Sexe", title="Répartition des griefs par sexe",
+        height=400, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly
     )
-    st.plotly_chart(fig_village, use_container_width=True)
+    fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
+
+with col_c1: st.plotly_chart(fig_comm, use_container_width=True)
+with col_c2:
+    if "Sexe" in df_filtered.columns:
+        st.plotly_chart(fig_sexe, use_container_width=True)
+    else:
+        st.info("⚠️ Pas de colonne 'Sexe' disponible dans le fichier.")
 
 # ============================================================== 
 # Graphique ligne : évolution temporelle (Top N)
