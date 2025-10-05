@@ -144,7 +144,8 @@ fig_type = px.bar(
 
 # --- Avancement général des griefs ---
 stat_counts = df_filtered["Statut_traitement"].value_counts()
-colors_map = {s:"#90ee90" if s=="Achevé" else px.colors.qualitative.Plotly[i%10] for i,s in enumerate(stat_counts.index)}
+colors_map = {s:"#90ee90" if s=="Achevé" else px.colors.qualitative.Plotly[i%10] 
+              for i,s in enumerate(stat_counts.index)}
 fig_stat = px.pie(
     df_filtered, names="Statut_traitement", values=stat_counts.values,
     color="Statut_traitement", color_discrete_map=colors_map,
@@ -155,3 +156,75 @@ fig_stat.update_traces(textinfo="percent+label", textposition="inside")
 c1,c2 = st.columns(2 if not plein_ecran else 1)
 c1.plotly_chart(fig_type,use_container_width=True)
 c2.plotly_chart(fig_stat,use_container_width=True)
+
+# --- Distribution par Nature ---
+ordre_nature = df_filtered["Nature_plainte"].value_counts().index.tolist()
+fig_nature = px.histogram(
+    df_filtered, y="Nature_plainte", color="Statut_traitement",
+    title="Distribution par nature", text_auto=True,
+    category_orders={"Nature_plainte": ordre_nature},
+    orientation="h", height=400, template="plotly_dark",
+    color_discrete_map={s:"#90ee90" if s=="Achevé" else px.colors.qualitative.Plotly[i%10] 
+                        for i,s in enumerate(df_filtered["Statut_traitement"].unique())}
+)
+st.plotly_chart(fig_nature,use_container_width=True)
+
+# --- Répartition par Communauté et Sexe ---
+st.subheader("🏘️ Répartition des griefs par communauté et par sexe")
+col_c1,col_c2 = st.columns(2 if not plein_ecran else 1)
+
+# Nb de griefs par communauté
+ordre_comm = df_filtered["Communaute"].value_counts().sort_values()
+fig_comm = px.bar(
+    x=ordre_comm.index, y=ordre_comm.values, text=ordre_comm.values,
+    labels={"x":"Communauté","y":"Nombre de griefs"},
+    title="Nombre de griefs par communauté", template="plotly_dark", height=400
+)
+
+# Répartition par sexe
+fig_sexe = px.pie(
+    df_filtered, names="Sexe", title="Répartition des griefs par sexe",
+    height=400, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly
+)
+fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
+
+col_c1.plotly_chart(fig_comm,use_container_width=True)
+col_c2.plotly_chart(fig_sexe,use_container_width=True)
+
+# --- Nature des griefs par sexe (tri croissant + labels) ---
+st.subheader("👥 Nature des griefs par sexe")
+df_cat_sexe = df_filtered.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre")
+ordre_nature_tri = df_cat_sexe.groupby("Nature_plainte")["Nombre"].sum().sort_values(ascending=True).index.tolist()
+fig_cat_sexe = px.bar(
+    df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe",
+    category_orders={"Nature_plainte": ordre_nature_tri},
+    orientation="h", title="Nature des griefs par sexe",
+    template="plotly_dark", height=400, text="Nombre"
+)
+st.plotly_chart(fig_cat_sexe,use_container_width=True)
+
+# --- Évolution temporelle (Top N) ---
+st.subheader("📈 Évolution temporelle des griefs")
+top_n = st.slider("Afficher le Top N des natures :", 3, 10, 5)
+trimestres = sorted(df_filtered["Trimestre"].unique())
+trimestre_choisi = st.selectbox("Filtrer par trimestre :", ["Tous"]+trimestres)
+df_trim = df_filtered if trimestre_choisi=="Tous" else df_filtered[df_filtered["Trimestre"]==trimestre_choisi]
+top_natures = df_trim["Nature_plainte"].value_counts().nlargest(top_n).index
+df_line = df_trim[df_trim["Nature_plainte"].isin(top_natures)].groupby(["Mois","Nature_plainte"]).size().reset_index(name="Nombre")
+fig_line = px.line(df_line,x="Mois",y="Nombre",color="Nature_plainte",markers=True,
+                   title=f"Évolution mensuelle des griefs (Top {top_n})",
+                   template="plotly_dark", height=400)
+fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
+st.plotly_chart(fig_line,use_container_width=True)
+
+# --- Durée moyenne de traitement ---
+if "Nb_jour" in df_trim.columns:
+    st.subheader("⏱️ Durée moyenne de traitement")
+    df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values(by="Nb_jour")
+    fig_duree = px.bar(df_duree,x="Nature_plainte",y="Nb_jour",text_auto=".1f",
+                       title="Durée moyenne de traitement par nature", template="plotly_dark", height=400)
+    st.plotly_chart(fig_duree,use_container_width=True)
+
+# --- Tableau final ---
+st.subheader("📋 Aperçu des données")
+st.dataframe(df_filtered.style.background_gradient(cmap="Blues"), use_container_width=True)
