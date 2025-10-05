@@ -200,10 +200,10 @@ fig_cat_sexe = px.bar(
     color_discrete_sequence=px.colors.qualitative.Plotly
 )
 # 🏷️ Renommage des axes
-    fig_cat_sexe.update_layout(
+fig_cat_sexe.update_layout(
         xaxis_title="Nombre",
         yaxis_title="Nature de griefs"
-    )
+    )    
 fig_cat_sexe.update_traces(textposition="inside")
 st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
