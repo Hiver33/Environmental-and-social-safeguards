@@ -131,11 +131,11 @@ else:
     c2.plotly_chart(fig_stat, use_container_width=True)
 
 # Histogramme par Nature
-ordre_nature = df_filtered["Nature_plainte"].value_counts().index.tolist()
+ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.tolist()
 fig_nature = px.histogram(
     df_filtered, y="Nature_plainte", color="Statut_traitement", text_auto=True,
     category_orders={"Nature_plainte": ordre_nature}, orientation="h",
-    template="plotly_dark", height=400, color_discrete_map=colors_map_statut
+    title = "Nombre de griefs par nature", template="plotly_dark", height=400, color_discrete_map=colors_map_statut
 )
 st.plotly_chart(fig_nature, use_container_width=True)
 
