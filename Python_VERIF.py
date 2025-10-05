@@ -34,7 +34,7 @@ else:
     st.sidebar.info("Aucune source importée. Utilisation du fichier par défaut.")
     df = load_data(url_excel)
 
-# Vérification des colonnes essentielles
+# Colonnes attendues
 colonnes_attendues = [
     "Type_depot", "Statut_traitement", "Nature_plainte",
     "Categorie", "Date_reception", "Nb_jour", "Communaute", "Sexe"
@@ -59,13 +59,11 @@ df["Mois"] = df["Date_reception"].dt.to_period("M").dt.to_timestamp()
 st.sidebar.header("Filtres")
 annee_courante = datetime.now().year
 annees_disponibles = sorted(df["Année"].unique())
-
 annee_choisie = st.sidebar.selectbox(
     "📅 Filtrer par année :", 
     annees_disponibles, 
     index=annees_disponibles.index(annee_courante) if annee_courante in annees_disponibles else 0
 )
-
 Types = st.sidebar.multiselect(
     "📂 Type de dépôt :", df["Type_depot"].dropna().unique(),
     default=df["Type_depot"].dropna().unique()
@@ -160,9 +158,7 @@ c1, c2 = st.columns(2 if not plein_ecran else 1)
 with c1: st.plotly_chart(fig1, use_container_width=True)
 with c2: st.plotly_chart(fig2, use_container_width=True)
 
-# ============================================================== 
 # Histogramme par Nature
-# ============================================================== 
 ordre_nature = df_filtered["Nature_plainte"].value_counts().index.tolist()
 fig3 = px.histogram(
     df_filtered, y="Nature_plainte", color="Statut_traitement",
@@ -176,7 +172,6 @@ st.plotly_chart(fig3, use_container_width=True)
 # Graphiques par Communauté et par Sexe
 # ============================================================== 
 st.subheader("🏘️ Répartition des griefs par communauté et par sexe")
-
 col_c1, col_c2 = st.columns(2 if not plein_ecran else 1)
 
 # Nb de griefs par communauté
@@ -198,6 +193,22 @@ fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
 
 with col_c1: st.plotly_chart(fig_comm, use_container_width=True)
 with col_c2: st.plotly_chart(fig_sexe, use_container_width=True)
+
+# ============================================================== 
+# Graphique : Nature des griefs par sexe (tri croissant)
+# ============================================================== 
+st.subheader("👥 Nature des griefs par sexe")
+df_cat_sexe = df_filtered.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre")
+ordre_nature_tri = df_cat_sexe.groupby("Nature_plainte")["Nombre"].sum().sort_values(ascending=True).index.tolist()
+
+fig_cat_sexe = px.bar(
+    df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe",
+    category_orders={"Nature_plainte": ordre_nature_tri},
+    orientation="h", title="Nature des griefs par sexe",
+    template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Plotly,
+    height=400
+)
+st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
 # ============================================================== 
 # Graphique ligne : évolution temporelle (Top N)
@@ -231,18 +242,6 @@ if "Nb_jour" in df_trim.columns:
         title="Durée moyenne de traitement par nature", height=400, template="plotly_dark"
     )
     st.plotly_chart(fig_duree, use_container_width=True)
-
-# ============================================================== 
-# Graphique : Nature des griefs par sexe
-# ============================================================== 
-st.subheader("👥 Nature des griefs par sexe")
-df_cat_sexe = df_trim.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre")
-fig_cat_sexe = px.bar(
-    df_cat_sexe, y="Nature_plainte", x="Nombre", color="Sexe", orientation="h",
-    title="Nature des griefs par sexe", template="plotly_dark",
-    color_discrete_sequence=px.colors.qualitative.Plotly, height=400
-)
-st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
 # ============================================================== 
 # Tableau des données
