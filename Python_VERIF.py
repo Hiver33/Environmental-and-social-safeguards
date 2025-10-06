@@ -78,6 +78,8 @@ if theme_choice == "Sombre":
     plotly_template = "plotly_dark"
     graph_bg_color = "#2b2d33"  # gris foncé
     font_color = "#ffffff"       # texte blanc
+    sidebar_widget_bg = "#ffffff"
+    sidebar_widget_text = "#0000ff"   # Widgets sidebar : fond blanc et texte bleu fixe
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
@@ -87,10 +89,6 @@ else:
     plotly_template = "plotly_white"
     graph_bg_color = "#f0f0f5"  # gris clair
     font_color = "#000000"       # texte noir
-
-# Widgets sidebar : fond blanc et texte bleu fixe
-sidebar_widget_bg = "#ffffff"
-sidebar_widget_text = "#0000ff"
 
 page_width = "100%" if plein_ecran else "80%"
 
