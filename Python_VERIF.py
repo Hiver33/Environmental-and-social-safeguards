@@ -77,6 +77,7 @@ if theme_choice == "Sombre":
     header_color = "#00ccff"
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
+    # texte sombre dans les widgets sidebar
     widget_text_color = "black"
 else:
     page_bg = "#f5f5f5"
@@ -86,6 +87,7 @@ else:
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
+    widget_text_color = "black"
 
 page_width = "100%" if plein_ecran else "80%"
 
@@ -105,10 +107,12 @@ st.markdown(f"""
     section[data-testid="stSidebar"] * {{
         color: {sidebar_text_color} !important;
     }}
-
-    /* Correction : en thème sombre, texte noir dans les champs de saisie */
-    {"section[data-testid='stSidebar'] input, section[data-testid='stSidebar'] select, section[data-testid='stSidebar'] textarea, section[data-testid='stSidebar'] div[role='listbox'], section[data-testid='stSidebar'] label {color: black !important;}" if theme_choice == "Sombre" else ""}
-
+    /* Texte sombre dans upload et multiselect */
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div,
+    section[data-testid="stSidebar"] input,
+    section[data-testid="stSidebar"] textarea {{
+        color: {widget_text_color} !important;
+    }}
     h1, h2, h3, h4 {{
         color: {header_color};
     }}
