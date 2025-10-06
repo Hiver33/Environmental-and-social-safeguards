@@ -134,7 +134,7 @@ h1, h2, h3, h4 {{
 
 /* Toggle bouton personnalisé */
 div[role="switch"] > div {{
-    background-color: {"#444" if theme_choice=="Sombre" else "#ccc"} !important;
+    background-color: {"#f5f5f5" if theme_choice=="Sombre" else "#ccc"} !important;
 }}
 </style>
 """, unsafe_allow_html=True)
