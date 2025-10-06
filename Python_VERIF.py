@@ -72,6 +72,46 @@ st.markdown(f"""
 h1,h2,h3{{color:#00ccff;}}
 </style>
 """, unsafe_allow_html=True)
+theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair"])
+
+if theme_choice == "Sombre":
+    page_bg = "#1a1d21"
+    text_color = "white"
+    header_color = "#00ccff"
+    card_colors = ["#00ccff","#00ff99","#ffcc00","#ff6666"]
+    plotly_template = "plotly_dark"
+else:
+    page_bg = "#f5f5f5"
+    text_color = "#1a1a1a"
+    header_color = "#1a73e8"
+    card_colors = ["#87CEFA","#90EE90","#FFD700","#FF7F7F"]
+    plotly_template = "plotly_white"
+
+st.markdown(f"""
+<style>
+.stApp {{ background-color:{page_bg}; color:{text_color}; max-width:{page_width}; margin:auto; }}
+h1,h2,h3{{color:{header_color};}}
+</style>
+""", unsafe_allow_html=True)
+
+# ------------------- Indicateurs avec couleurs dynamiques -------------------
+for col,(val,label),color in zip(cols,metrics,card_colors):
+    col.markdown(f"""
+        <div style='background:{color}; padding:15px; border-radius:15px;'>
+            <p style='font-size:28px; font-weight:bold; color:black'>{val}</p>
+            <p style='font-weight:bold; color:black'>{label}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ------------------- Graphiques avec template dynamique -------------------
+fig_type.update_layout(template=plotly_template)
+fig_stat.update_layout(template=plotly_template)
+fig_nature.update_layout(template=plotly_template)
+fig_comm.update_layout(template=plotly_template)
+fig_sexe.update_layout(template=plotly_template)
+fig_cat_sexe.update_layout(template=plotly_template)
+fig_line.update_layout(template=plotly_template)
+fig_duree.update_layout(template=plotly_template)
 
 #====================================================================
 # -------------------------- Indicateurs ----------------------------
