@@ -65,10 +65,10 @@ if df_filtered.empty:
 # ---------------------- Apparence / Thème --------------------------
 #====================================================================
 st.sidebar.markdown("---")
+plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 st.sidebar.header("🖌️ Apparence")
 
 theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair"])
-plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 
 if theme_choice == "Sombre":
     page_bg = "#1a1d21"
