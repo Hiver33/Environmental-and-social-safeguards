@@ -68,7 +68,7 @@ st.sidebar.markdown("---")
 plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 theme_choice = st.sidebar.radio("🖌️ Apparence :", ["Sombre", "Clair"])
 
-# Définition des couleurs selon le thème
+# Couleurs selon thème
 if theme_choice == "Sombre":
     page_bg = "#1a1d21"
     sidebar_bg = "#2c2f33"
@@ -77,8 +77,7 @@ if theme_choice == "Sombre":
     header_color = "#00ccff"
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
-    sidebar_widget_bg = "#e0e0e0"      # fond clair pour widgets
-    sidebar_widget_text = "#000000"    # texte sombre pour lisibilité
+    sidebar_widget_bg = "#e0e0e0"   # fond clair pour widgets
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
@@ -87,15 +86,17 @@ else:
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
-    sidebar_widget_bg = "#ffffff"      # fond clair pour widgets
-    sidebar_widget_text = "#000000"    # texte sombre
+    sidebar_widget_bg = "#ffffff"
+    
+# Texte bleu constant pour le file_uploader
+sidebar_widget_text_color = "#1a73e8"
 
 page_width = "100%" if plein_ecran else "80%"
 
-# Application du style CSS
+# Application CSS
 st.markdown(f"""
 <style>
-    /* Application générale */
+    /* Page générale */
     .stApp {{
         background-color: {page_bg};
         color: {text_color};
@@ -109,7 +110,6 @@ st.markdown(f"""
         color: {sidebar_text_color};
     }}
 
-    /* Tous les textes de la sidebar */
     section[data-testid="stSidebar"] * {{
         color: {sidebar_text_color} !important;
     }}
@@ -117,16 +117,15 @@ st.markdown(f"""
     /* Multiselect / selectbox */
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
         background-color: {sidebar_widget_bg} !important;
-        color: {sidebar_widget_text} !important;
+        color: {sidebar_widget_text_color} !important;
     }}
 
-    /* File uploader */
-    section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
-        background-color: {sidebar_widget_bg} !important;
-        color: {sidebar_widget_text} !important;
+    /* File uploader : texte bleu constant */
+    section[data-testid="stSidebar"] div[data-testid="stFileUploader"] input[type="file"] {{
+        color: {sidebar_widget_text_color} !important;
     }}
 
-    /* Titres des graphiques */
+    /* Titres graphiques */
     h1, h2, h3, h4 {{
         color: {header_color};
     }}
