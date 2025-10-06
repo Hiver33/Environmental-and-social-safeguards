@@ -117,8 +117,8 @@ st.markdown(f"""
 /* Widgets multiselect, selectbox et file uploader */
 [data-testid="stSidebar"] div[data-baseweb="select"] > div > div,
 [data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
-    background-color: {sidebar_widget_bg} !important;
-    color: {sidebar_widget_text} !important;
+    background-color: {sidebar_bg} !important;
+    color: {sidebar_text_color} !important;
 }}
 
 /* Sliders, radios, inputs */
