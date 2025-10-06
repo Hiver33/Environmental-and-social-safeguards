@@ -87,8 +87,8 @@ else:
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
-    sidebar_widget_bg = "#e0e0e0"      # fond blanc pour widgets
-    sidebar_widget_text = "#000000"    # texte bleu pour widgets
+    sidebar_widget_bg = "#ffffff"      # fond clair pour widgets
+    sidebar_widget_text = "#000000"    # texte sombre
 
 page_width = "100%" if plein_ecran else "80%"
 
@@ -163,10 +163,9 @@ fig_type = px.bar(
     x=type_counts.index, y=type_counts.values, text=type_counts.values,
     title="Répartition par type de dépôt", template=plotly_template, height=400
 )
-fig_type.update_layout(
-    title_font=dict(color="#1a73e8", size=18),
-    xaxis_title="Type de dépôt", yaxis_title="Nombre de griefs"
-)
+fig_type.update_traces(marker_line_width=0)
+fig_type.update_layout(title_font=dict(color="#1a73e8", size=18),
+                       xaxis_title="Type de dépôt", yaxis_title="Nombre de griefs")
 
 colors_map_statut = {
     "Achevé": "#00ff99",
@@ -199,6 +198,7 @@ fig_nature = px.histogram(
     title="Nombre de griefs par nature", template=plotly_template,
     color_discrete_map=colors_map_statut, height=400
 )
+fig_nature.update_traces(marker_line_width=0)
 fig_nature.update_layout(
     title_font=dict(color="#1a73e8", size=18),
     xaxis_title="Nature de griefs", yaxis_title="Nombre",
@@ -215,10 +215,9 @@ fig_comm = px.bar(
     text=df_filtered["Communaute"].value_counts().sort_values().values,
     title="Nombre de griefs par communauté", template=plotly_template, height=400
 )
-fig_comm.update_layout(
-    title_font=dict(color="#1a73e8", size=18),
-    xaxis_title="Village/Localité", yaxis_title="Nombre de griefs"
-)
+fig_comm.update_traces(marker_line_width=0)
+fig_comm.update_layout(title_font=dict(color="#1a73e8", size=18),
+                       xaxis_title="Village/Localité", yaxis_title="Nombre de griefs")
 c1.plotly_chart(fig_comm, use_container_width=True)
 
 fig_sexe = px.pie(
@@ -237,11 +236,10 @@ fig_cat_sexe = px.bar(
     category_orders={"Nature_plainte": ordre_nature_tri}, orientation="h",
     template=plotly_template, text="Nombre", height=400
 )
-fig_cat_sexe.update_layout(
-    title="Nature des griefs par sexe",
-    title_font=dict(color="#1a73e8", size=18),
-    xaxis_title="Nombre", yaxis_title="Nature de griefs"
-)
+fig_cat_sexe.update_traces(marker_line_width=0)
+fig_cat_sexe.update_layout(title="Nature des griefs par sexe",
+                           title_font=dict(color="#1a73e8", size=18),
+                           xaxis_title="Nombre", yaxis_title="Nature de griefs")
 st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
 # Évolution temporelle
@@ -253,11 +251,9 @@ df_trim = df_filtered if trimestre_sel == "Tous" else df_filtered[df_filtered["T
 top_natures = df_trim["Nature_plainte"].value_counts().nlargest(top_n).index
 df_line = df_trim[df_trim["Nature_plainte"].isin(top_natures)].groupby(["Mois","Nature_plainte"]).size().reset_index(name="Nombre")
 fig_line = px.line(df_line, x="Mois", y="Nombre", color="Nature_plainte", markers=True,
-    title=f"Top {top_n} évolution", template=plotly_template, height=400)
-fig_line.update_layout(
-    title_font=dict(color="#1a73e8", size=18),
-    legend_title_text="Nature de griefs"
-)
+                   title=f"Top {top_n} évolution", template=plotly_template, height=400)
+fig_line.update_layout(title_font=dict(color="#1a73e8", size=18),
+                       legend_title_text="Nature de griefs")
 fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
 st.plotly_chart(fig_line, use_container_width=True)
 
@@ -265,11 +261,10 @@ st.plotly_chart(fig_line, use_container_width=True)
 if "Nb_jour" in df_trim.columns:
     df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
     fig_duree = px.bar(df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
-        title="Durée moyenne de traitement par nature", template=plotly_template, height=400)
-    fig_duree.update_layout(
-        title_font=dict(color="#1a73e8", size=18),
-        xaxis_title="Nature de griefs", yaxis_title="Durée (jours)"
-    )
+                       title="Durée moyenne de traitement par nature", template=plotly_template, height=400)
+    fig_duree.update_traces(marker_line_width=0)
+    fig_duree.update_layout(title_font=dict(color="#1a73e8", size=18),
+                            xaxis_title="Nature de griefs", yaxis_title="Durée (jours)")
     st.plotly_chart(fig_duree, use_container_width=True)
 
 # Tableau final
