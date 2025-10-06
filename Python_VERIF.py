@@ -68,7 +68,7 @@ st.sidebar.markdown("---")
 plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 theme_choice = st.sidebar.radio("🖌️ Apparence :", ["Sombre", "Clair"])
 
-# Couleurs selon thème
+# Couleurs générales selon thème
 if theme_choice == "Sombre":
     page_bg = "#1a1d21"
     sidebar_bg = "#2c2f33"
@@ -77,7 +77,6 @@ if theme_choice == "Sombre":
     header_color = "#00ccff"
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
-    sidebar_widget_bg = "#e0e0e0"
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
@@ -86,12 +85,12 @@ else:
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
-    sidebar_widget_bg = "#ffffff"
-
-# Texte bleu pour le file_uploader et multiselect
-sidebar_widget_text_color = "#1a73e8"
 
 page_width = "100%" if plein_ecran else "80%"
+
+# **Forcer file_uploader et multiselect en bleu sur fond blanc**
+sidebar_widget_bg = "#ffffff"
+sidebar_widget_text_color = "#1a73e8"
 
 # Application CSS
 st.markdown(f"""
@@ -104,7 +103,7 @@ st.markdown(f"""
         margin: auto;
     }}
 
-    /* Sidebar */
+    /* Sidebar : fond et texte général selon thème */
     section[data-testid="stSidebar"] {{
         background-color: {sidebar_bg};
         color: {sidebar_text_color};
@@ -114,14 +113,15 @@ st.markdown(f"""
         color: {sidebar_text_color} !important;
     }}
 
-    /* Multiselect / selectbox : texte bleu */
+    /* Multiselect / selectbox : toujours fond blanc et texte bleu */
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
         background-color: {sidebar_widget_bg} !important;
         color: {sidebar_widget_text_color} !important;
     }}
 
-    /* File uploader : texte bleu */
-    section[data-testid="stSidebar"] div[data-testid="stFileUploader"] input[type="file"] {{
+    /* File uploader : toujours fond blanc et texte bleu */
+    section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
+        background-color: {sidebar_widget_bg} !important;
         color: {sidebar_widget_text_color} !important;
     }}
 
