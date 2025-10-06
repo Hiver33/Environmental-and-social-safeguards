@@ -78,7 +78,6 @@ if theme_choice == "Clair":
     plotly_template = "plotly_white"
     graph_bg_color = "#f0f0f5"
     font_color = "#000000"
-    
 else:
     page_bg = "#1a1d21"
     sidebar_bg = "#2c2f33"
@@ -89,7 +88,6 @@ else:
     graph_bg_color = "#2b2d33"
     font_color = "#ffffff"
 
-# Widgets sidebar adaptés au thème
 sidebar_widget_bg = sidebar_bg
 sidebar_widget_text = sidebar_text_color
 page_width = "100%" if plein_ecran else "80%"
@@ -115,14 +113,13 @@ st.markdown(f"""
     color: {sidebar_text_color} !important;
 }}
 
-/* Widgets multiselect, selectbox et file uploader */
+/* Widgets */
 [data-testid="stSidebar"] div[data-baseweb="select"] > div > div,
 [data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
     background-color: {sidebar_bg} !important;
     color: {sidebar_text_color} !important;
 }}
 
-/* Sliders, radios, inputs */
 div[data-baseweb="slider"] *,
 div[data-baseweb="select"] *,
 div[data-baseweb="radio"] *,
@@ -131,7 +128,7 @@ div[data-baseweb="input"] * {{
 }}
 
 /* Titres */
-h1,h2,h3,h4 {{
+h1, h2, h3, h4 {{
     color: {header_color};
 }}
 
@@ -185,7 +182,8 @@ fig_type.update_layout(
     title_font=dict(color=header_color, size=18),
     xaxis_title="Type de dépôt", yaxis_title="Nombre de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend=dict(title_font=dict(color=header_color), font=dict(color=header_color))
 )
 
 # --- Avancement général ---
@@ -198,10 +196,10 @@ fig_stat.update_traces(textinfo="percent+label", textposition="inside", marker_l
 fig_stat.update_layout(
     title_font=dict(color=header_color, size=18),
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend=dict(title_font=dict(color=header_color), font=dict(color=header_color))
 )
 
-# --- Affichage ---
 if plein_ecran:
     st.plotly_chart(fig_type, use_container_width=True)
     st.plotly_chart(fig_stat, use_container_width=True)
@@ -224,7 +222,8 @@ fig_nature.update_layout(
     xaxis_title="Nature de griefs", yaxis_title="Nombre",
     legend_title_text="Statut du traitement",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend=dict(title_font=dict(color=header_color), font=dict(color=header_color))
 )
 st.plotly_chart(fig_nature, use_container_width=True)
 
@@ -238,23 +237,23 @@ fig_comm = px.bar(
     text=df_filtered["Communaute"].value_counts().sort_values().values,
     title="Nombre de griefs par communauté", template=plotly_template, height=400
 )
-fig_comm.update_traces(marker_line_width=0)
 fig_comm.update_layout(
     title_font=dict(color=header_color, size=18),
     xaxis_title="Village/Localité", yaxis_title="Nombre de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend=dict(title_font=dict(color=header_color), font=dict(color=header_color))
 )
 c1.plotly_chart(fig_comm, use_container_width=True)
 
 fig_sexe = px.pie(
     df_filtered, names="Sexe", title="Répartition par sexe", template=plotly_template, height=400
 )
-fig_sexe.update_traces(textinfo="percent+label", textposition="inside", marker_line_width=0)
 fig_sexe.update_layout(
     title_font=dict(color=header_color, size=18),
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend=dict(title_font=dict(color=header_color), font=dict(color=header_color))
 )
 c2.plotly_chart(fig_sexe, use_container_width=True)
 
@@ -267,13 +266,13 @@ fig_cat_sexe = px.bar(
     category_orders={"Nature_plainte": ordre_nature_tri}, orientation="h",
     template=plotly_template, text="Nombre", height=400
 )
-fig_cat_sexe.update_traces(marker_line_width=0)
 fig_cat_sexe.update_layout(
     title="Nature des griefs par sexe",
     title_font=dict(color=header_color, size=18),
     xaxis_title="Nombre", yaxis_title="Nature de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend=dict(title_font=dict(color=header_color), font=dict(color=header_color))
 )
 st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
@@ -291,7 +290,8 @@ fig_line.update_layout(
     title_font=dict(color=header_color, size=18),
     legend_title_text="Nature de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend=dict(title_font=dict(color=header_color), font=dict(color=header_color))
 )
 fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
 st.plotly_chart(fig_line, use_container_width=True)
@@ -301,12 +301,12 @@ if "Nb_jour" in df_trim.columns:
     df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
     fig_duree = px.bar(df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
         title="Durée moyenne de traitement par nature", template=plotly_template, height=400)
-    fig_duree.update_traces(marker_line_width=0)
     fig_duree.update_layout(
         title_font=dict(color=header_color, size=18),
         xaxis_title="Nature de griefs", yaxis_title="Durée (jours)",
         plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-        font=dict(color=font_color)
+        font=dict(color=font_color),
+        legend=dict(title_font=dict(color=header_color), font=dict(color=header_color))
     )
     st.plotly_chart(fig_duree, use_container_width=True)
 
