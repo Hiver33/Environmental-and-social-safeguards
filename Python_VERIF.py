@@ -72,7 +72,7 @@ theme_choice = st.sidebar.radio("🖌️ Apparence :", ["Sombre", "Clair"])
 if theme_choice == "Sombre":
     page_bg = "#1a1d21"
     sidebar_bg = "#2c2f33"
-    text_color = "#ffffff"
+    text_color = "#1a1a1a"
     sidebar_text_color = "#ffffff"
     header_color = "#00ccff"
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
@@ -80,7 +80,7 @@ if theme_choice == "Sombre":
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
-    text_color = "#1a1d21"
+    text_color = "#1a1a1a"
     sidebar_text_color = "#1a1a1a"
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
