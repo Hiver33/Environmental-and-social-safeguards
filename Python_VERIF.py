@@ -77,8 +77,6 @@ if theme_choice == "Sombre":
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
     graph_bg_color = "#2b2d33"  # gris foncé
-    toggle_color = "#00ccff"
-    toggle_bg = "#444"
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
@@ -87,8 +85,6 @@ else:
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
     graph_bg_color = "#f0f0f5"  # gris clair
-    toggle_color = "#1a73e8"
-    toggle_bg = "#ddd"
 
 # Widgets sidebar : fond blanc et texte bleu fixe
 sidebar_widget_bg = "#ffffff"
@@ -133,14 +129,6 @@ section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {
 h1, h2, h3, h4 {{
     color: {header_color};
 }}
-
-/* Toggle / Switch */
-div[data-baseweb="switch"] > div {{
-    background-color: {toggle_bg} !important;
-}}
-div[data-baseweb="switch"] input:checked + span {{
-    background-color: {toggle_color} !important;
-}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -149,7 +137,7 @@ div[data-baseweb="switch"] input:checked + span {{
 #====================================================================
 st.title("📊 Dashboard Suivi du MGG")
 total = len(df_filtered)
-acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])] )
+acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])])
 en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
 a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 
@@ -182,7 +170,7 @@ fig_type = px.bar(
     x=type_counts.index, y=type_counts.values, text=type_counts.values,
     title="Répartition par type de dépôt", template=plotly_template, height=400
 )
-fig_type.update_traces(marker_line_width=0)
+fig_type.update_traces(marker_line_width=0)  # pas de bordures
 fig_type.update_layout(
     title_font=dict(color=header_color, size=18),
     xaxis_title="Type de dépôt", yaxis_title="Nombre de griefs",
