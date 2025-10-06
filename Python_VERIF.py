@@ -68,28 +68,31 @@ st.sidebar.markdown("---")
 plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 theme_choice = st.sidebar.radio("🖌️ Apparence :", ["Sombre", "Clair"])
 
+# Définition des couleurs selon le thème
 if theme_choice == "Sombre":
     page_bg = "#1a1d21"
-    sidebar_bg = "#2c2f33"  # fond sombre sidebar
+    sidebar_bg = "#2c2f33"
     sidebar_text_color = "#ffffff"
     header_color = "#00ccff"
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
-    graph_bg_color = "#2b2d33"
-    font_color = "#ffffff"
+    graph_bg_color = "#2b2d33"  # gris foncé
+    font_color = "#ffffff"       # texte blanc
 else:
     page_bg = "#f5f5f5"
-    sidebar_bg = "#dcdcdc"  # fond clair sidebar
+    sidebar_bg = "#dcdcdc"
     sidebar_text_color = "#1a1a1a"
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
-    graph_bg_color = "#f0f0f5"
-    font_color = "#000000"
+    graph_bg_color = "#f0f0f5"  # gris clair
+    font_color = "#000000"       # texte noir
 
 # Widgets sidebar : fond blanc et texte bleu fixe
 sidebar_widget_bg = "#ffffff"
 sidebar_widget_text = "#0000ff"
+
+page_width = "100%" if plein_ecran else "80%"
 
 # Application du style CSS
 st.markdown(f"""
@@ -98,38 +101,30 @@ st.markdown(f"""
 .stApp {{
     background-color: {page_bg};
     color: {sidebar_text_color};
-    max-width: {"100%" if plein_ecran else "80%"};
+    max-width: {page_width};
     margin: auto;
 }}
 
 /* Sidebar */
-.section[data-testid="stSidebar"] {{
+section[data-testid="stSidebar"] {{
     background-color: {sidebar_bg};
 }}
 
 /* Texte clair dans la sidebar si thème sombre */
-.section[data-testid="stSidebar"] * {{
+section[data-testid="stSidebar"] * {{
     color: {sidebar_text_color} !important;
 }}
 
-/* Widgets multiselect, selectbox */
-.section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
+/* Multiselect / selectbox */
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
     background-color: {sidebar_widget_bg} !important;
     color: {sidebar_widget_text} !important;
 }}
 
 /* File uploader */
-.section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
+section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
     background-color: {sidebar_widget_bg} !important;
     color: {sidebar_widget_text} !important;
-}}
-
-/* Slider, selectbox, radio, number input : texte clair en sombre */
-div[data-baseweb="slider"] *, 
-div[data-baseweb="select"] *, 
-div[data-baseweb="radio"] *, 
-div[data-baseweb="input"] * {{
-    color: {font_color} !important;
 }}
 
 /* Titres des graphiques */
@@ -139,7 +134,7 @@ h1, h2, h3, h4 {{
 
 /* Toggle bouton personnalisé */
 div[role="switch"] > div {{
-    background-color: {"#f5f5f5" if theme_choice=="Sombre" else "#ccc"} !important;
+    background-color: {"#444" if theme_choice=="Sombre" else "#ccc"} !important;
 }}
 </style>
 """, unsafe_allow_html=True)
