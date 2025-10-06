@@ -87,6 +87,10 @@ else:
     graph_bg_color = "#f0f0f5"
     font_color = "#000000"
 
+# Widgets sidebar : fond blanc et texte bleu fixe
+sidebar_widget_bg = "#ffffff"
+sidebar_widget_text = "#0000ff"
+
 # Application du style CSS
 st.markdown(f"""
 <style>
@@ -110,14 +114,14 @@ st.markdown(f"""
 
 /* Widgets multiselect, selectbox */
 .section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
-    background-color: #ffffff !important;
-    color: #0000ff !important;
+    background-color: {sidebar_widget_bg} !important;
+    color: {sidebar_widget_text} !important;
 }}
 
 /* File uploader */
 .section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
-    background-color: #ffffff !important;
-    color: #0000ff !important;
+    background-color: {sidebar_widget_bg} !important;
+    color: {sidebar_widget_text} !important;
 }}
 
 /* Slider, selectbox, radio, number input : texte clair en sombre */
@@ -145,7 +149,7 @@ div[role="switch"] > div {{
 #====================================================================
 st.title("📊 Dashboard Suivi du MGG")
 total = len(df_filtered)
-acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])])
+acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])] )
 en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
 a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 
