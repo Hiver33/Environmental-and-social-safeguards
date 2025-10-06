@@ -106,25 +106,33 @@ st.markdown(f"""
 }}
 
 /* Sidebar */
-section[data-testid="stSidebar"] {{
+.section[data-testid="stSidebar"] {{
     background-color: {sidebar_bg};
 }}
 
 /* Texte clair dans la sidebar si thème sombre */
-section[data-testid="stSidebar"] * {{
+.section[data-testid="stSidebar"] * {{
     color: {sidebar_text_color} !important;
 }}
 
 /* Multiselect / selectbox */
-section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
+.section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
     background-color: {sidebar_widget_bg} !important;
     color: {sidebar_widget_text} !important;
 }}
 
 /* File uploader */
-section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
+.section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
     background-color: {sidebar_widget_bg} !important;
     color: {sidebar_widget_text} !important;
+}}
+
+/* Slider, selectbox, radio, number input : texte clair en sombre */
+div[data-baseweb="slider"] *, 
+div[data-baseweb="select"] *, 
+div[data-baseweb="radio"] *, 
+div[data-baseweb="input"] * {{
+    color: {font_color} !important;
 }}
 
 /* Titres des graphiques */
@@ -144,7 +152,7 @@ div[role="switch"] > div {{
 #====================================================================
 st.title("📊 Dashboard Suivi du MGG")
 total = len(df_filtered)
-acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])] )
+acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])])
 en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
 a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 
