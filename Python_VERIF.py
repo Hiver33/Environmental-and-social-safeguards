@@ -65,11 +65,49 @@ if df_filtered.empty:
 #====================================================================
 # ----------------------------- Thème -------------------------------
 #====================================================================
+st.sidebar.markdown("---")
+st.sidebar.header("🖌️ Apparence")
+plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
+theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair"])
+
+if theme_choice == "Sombre":
+    page_bg = "#1a1d21"
+    sidebar_bg = "#2c2f33"
+    text_color = "#ffffff"
+    sidebar_text_color = "#ffffff"
+    header_color = "#1e90ff"  # bleu vif
+    card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
+    plotly_template = "plotly_dark"
+else:
+    page_bg = "#f5f5f5"
+    sidebar_bg = "#dcdcdc"
+    text_color = "#1a1a1a"
+    sidebar_text_color = "#000000"
+    header_color = "#1e90ff"  # bleu vif
+    card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
+    plotly_template = "plotly_white"
+
 page_width = "100%" if plein_ecran else "80%"
+
+# Application du style
 st.markdown(f"""
 <style>
-.stApp {{ background-color:#1a1d21; color:white; max-width:{page_width}; margin:auto; }}
-h1,h2,h3{{color:#00ccff;}}
+    .stApp {{
+        background-color: {page_bg};
+        color: {text_color};
+        max-width: {page_width};
+        margin: auto;
+    }}
+    section[data-testid="stSidebar"] {{
+        background-color: {sidebar_bg};
+        color: {sidebar_text_color};
+    }}
+    section[data-testid="stSidebar"] * {{
+        color: {sidebar_text_color} !important;
+    }}
+    h1, h2, h3, h4 {{
+        color: {header_color};
+    }}
 </style>
 """, unsafe_allow_html=True)
 
