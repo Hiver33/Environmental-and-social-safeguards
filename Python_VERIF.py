@@ -55,7 +55,7 @@ if df_filtered.empty:
 
 # ==================== THEME ====================
 page_width = "100%" if plein_ecran else "80%"
-theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair harmonieux"])
+theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair"])
 
 if theme_choice == "Sombre":
     page_bg = "#1a1d21"
@@ -68,16 +68,15 @@ if theme_choice == "Sombre":
     sidebar_bg = "#111318"
     sidebar_text = "white"
 else:
-    # Thème clair harmonieux
     page_bg = "#f5f5f5"
-    text_color = "#333333"
-    header_color = "#1a73e8"
+    text_color = "#000000"
+    header_color = "#000000"
     card_colors = ["#A8D5BA","#FFD8A9","#FFAAA7","#B5EAEA"]
     plotly_template = "plotly"
     plot_bg = "#f5f5f5"
     paper_bg = "#f5f5f5"
     sidebar_bg = "#e6e6e6"
-    sidebar_text = "#333333"
+    sidebar_text = "#000000"
 
 # CSS global
 st.markdown(f"""
@@ -88,7 +87,7 @@ h1,h2,h3{{color:{header_color};}}
 [data-testid="stSidebar"] {{ background-color:{sidebar_bg}; color:{sidebar_text}; }}
 [data-testid="stSidebar"] .stTextInput>div>input,
 [data-testid="stSidebar"] .stSelectbox>div>div,
-[data-testid="stSidebar"] .stMultiselect>div>div {{ background-color: {sidebar_bg}; color:{sidebar_text}; }}
+[data-testid="stSidebar"] .stMultiselect>div>div {{ background-color: {sidebar_bg}; color:{sidebar_text}; border:1px solid #888888; }}
 [data-testid="stSidebar"] .stSlider>div>div>div>div {{ background-color:{sidebar_bg}; }}
 [data-testid="stSidebar"] .stRadio>div>label {{ color:{sidebar_text}; }}
 </style>
@@ -106,7 +105,7 @@ metrics = [(total,"Total"),(acheves,"Achevés"),(en_cours,"En cours"),(a_traiter
 
 for col,(val,label),color in zip(cols,metrics,card_colors):
     col.markdown(f"""
-        <div style='background:{color}; padding:15px; border-radius:15px;'>
+        <div style='background:{color}; padding:15px; border-radius:15px; border:1px solid #888888'>
             <p style='font-size:28px; font-weight:bold; color:black'>{val}</p>
             <p style='font-weight:bold; color:black'>{label}</p>
         </div>
@@ -126,7 +125,9 @@ fig_type = px.bar(
     x=type_counts.index, y=type_counts.values, text=type_counts.values,
     title="Répartition par type de dépôt", template=plotly_template, height=400
 )
-fig_type.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color)
+fig_type.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color, 
+                       xaxis=dict(linecolor="#888888", tickcolor="#888888"), 
+                       yaxis=dict(linecolor="#888888", tickcolor="#888888"))
 
 # Avancement général
 fig_stat = px.pie(
@@ -145,7 +146,9 @@ fig_nature = px.histogram(
     title="Nombre de griefs par nature", template=plotly_template, height=400,
     color_discrete_map=colors_map_statut
 )
-fig_nature.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color)
+fig_nature.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color,
+                         xaxis=dict(linecolor="#888888", tickcolor="#888888"),
+                         yaxis=dict(linecolor="#888888", tickcolor="#888888"))
 
 # Griefs par communauté
 fig_comm = px.bar(
@@ -154,7 +157,9 @@ fig_comm = px.bar(
     text=df_filtered["Communaute"].value_counts().sort_values().values,
     title="Nombre de griefs par communauté", template=plotly_template, height=400
 )
-fig_comm.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color)
+fig_comm.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color,
+                       xaxis=dict(linecolor="#888888", tickcolor="#888888"),
+                       yaxis=dict(linecolor="#888888", tickcolor="#888888"))
 
 # Griefs par sexe
 fig_sexe = px.pie(
@@ -172,13 +177,33 @@ fig_cat_sexe = px.bar(
     orientation="h", template=plotly_template, height=400, text="Nombre",
     color_discrete_sequence=px.colors.qualitative.Pastel
 )
-fig_cat_sexe.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color)
+fig_cat_sexe.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color,
+                           xaxis=dict(linecolor="#888888", tickcolor="#888888"),
+                           yaxis=dict(linecolor="#888888", tickcolor="#888888"))
 fig_cat_sexe.update_traces(textposition="inside")
 
-# ==================== Slider Top N ====================
+# Affichage des graphiques
+st.subheader("📈 Analyse visuelle")
+if plein_ecran:
+    st.plotly_chart(fig_type, use_container_width=True)
+    st.plotly_chart(fig_stat, use_container_width=True)
+    st.plotly_chart(fig_nature, use_container_width=True)
+    st.plotly_chart(fig_comm, use_container_width=True)
+    st.plotly_chart(fig_sexe, use_container_width=True)
+    st.plotly_chart(fig_cat_sexe, use_container_width=True)
+else:
+    c1, c2 = st.columns(2)
+    c1.plotly_chart(fig_type, use_container_width=True)
+    c2.plotly_chart(fig_stat, use_container_width=True)
+    st.plotly_chart(fig_nature, use_container_width=True)
+    c1.plotly_chart(fig_comm, use_container_width=True)
+    c2.plotly_chart(fig_sexe, use_container_width=True)
+    st.plotly_chart(fig_cat_sexe, use_container_width=True)
+
+# ==================== SLIDER TOP N AVANT GRAPHIQUE ====================
+st.subheader("📈 Évolution temporelle des griefs")
 top_n = st.slider("Top N natures :", 3, 10, 5)
 
-# Top N évolution temporelle
 trimestres = sorted(df_filtered["Trimestre"].unique())
 trimestre_sel = st.selectbox("Filtrer par trimestre :", ["Tous"]+trimestres)
 df_trim = df_filtered if trimestre_sel=="Tous" else df_filtered[df_filtered["Trimestre"]==trimestre_sel]
@@ -188,35 +213,22 @@ fig_line = px.line(
     df_line, x="Mois", y="Nombre", color="Nature_plainte", markers=True,
     title=f"Top {top_n} évolution", template=plotly_template, height=400
 )
-fig_line.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color)
-fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
+fig_line.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color,
+                       xaxis=dict(linecolor="#888888", tickcolor="#888888"),
+                       yaxis=dict(linecolor="#888888", tickcolor="#888888"))
+st.plotly_chart(fig_line, use_container_width=True)
 
-# Durée moyenne par nature
+# ==================== Durée moyenne ====================
 if "Nb_jour" in df_trim.columns:
     df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
     fig_duree = px.bar(
         df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
         title="Durée moyenne de traitement par nature", template=plotly_template, height=400
     )
-    fig_duree.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color)
-
-# ==================== AFFICHAGE ====================
-if plein_ecran:
-    for g in [fig_type, fig_stat, fig_nature, fig_comm, fig_sexe, fig_cat_sexe, fig_line]:
-        st.plotly_chart(g, use_container_width=True)
-    if "Nb_jour" in df_trim.columns:
-        st.plotly_chart(fig_duree, use_container_width=True)
-else:
-    c1, c2 = st.columns(2)
-    c1.plotly_chart(fig_type, use_container_width=True)
-    c2.plotly_chart(fig_stat, use_container_width=True)
-    st.plotly_chart(fig_nature, use_container_width=True)
-    c1.plotly_chart(fig_comm, use_container_width=True)
-    c2.plotly_chart(fig_sexe, use_container_width=True)
-    st.plotly_chart(fig_cat_sexe, use_container_width=True)
-    st.plotly_chart(fig_line, use_container_width=True)
-    if "Nb_jour" in df_trim.columns:
-        st.plotly_chart(fig_duree, use_container_width=True)
+    fig_duree.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color,
+                            xaxis=dict(linecolor="#888888", tickcolor="#888888"),
+                            yaxis=dict(linecolor="#888888", tickcolor="#888888"))
+    st.plotly_chart(fig_duree, use_container_width=True)
 
 # ==================== TABLEAU ====================
 st.subheader("📋 Aperçu des données")
