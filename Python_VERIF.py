@@ -76,8 +76,8 @@ if theme_choice == "Sombre":
     header_color = "#00ccff"
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
-    graph_bg_color = "#2b2d33"  # gris foncé
-    font_color = "#ffffff"       # texte blanc
+    graph_bg_color = "#2b2d33"
+    font_color = "#ffffff"
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
@@ -85,13 +85,12 @@ else:
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
-    graph_bg_color = "#f0f0f5"  # gris clair
-    font_color = "#000000"       # texte noir
+    graph_bg_color = "#f0f0f5"
+    font_color = "#000000"
 
-# Widgets sidebar : fond blanc et texte bleu fixe
-sidebar_widget_bg = "#ffffff"
-sidebar_widget_text = "#0000ff"
-
+# Widgets sidebar adaptés au thème
+sidebar_widget_bg = sidebar_bg
+sidebar_widget_text = sidebar_text_color
 page_width = "100%" if plein_ecran else "80%"
 
 # Application du style CSS
@@ -100,44 +99,42 @@ st.markdown(f"""
 /* Application générale */
 .stApp {{
     background-color: {page_bg};
-    color: {sidebar_text_color};
+    color: {font_color};
     max-width: {page_width};
     margin: auto;
 }}
 
+/* Sidebar */
+[data-testid="stSidebar"] {{
+    background-color: {sidebar_bg} !important;
 }}
 
-/* Texte clair dans la sidebar si thème sombre */
-.section[data-testid="stSidebar"] * {{
+/* Texte dans la sidebar */
+[data-testid="stSidebar"] * {{
     color: {sidebar_text_color} !important;
 }}
 
-/* Widgets multiselect, selectbox */
-.section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
+/* Widgets multiselect, selectbox et file uploader */
+[data-testid="stSidebar"] div[data-baseweb="select"] > div > div,
+[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
     background-color: {sidebar_widget_bg} !important;
     color: {sidebar_widget_text} !important;
 }}
 
-/* File uploader */
-.section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
-    background-color: {sidebar_widget_bg} !important;
-    color: {sidebar_widget_text} !important;
-}}
-
-/* Slider, selectbox, radio, number input : texte clair en sombre */
-div[data-baseweb="slider"] *, 
-div[data-baseweb="select"] *, 
-div[data-baseweb="radio"] *, 
+/* Sliders, radios, inputs */
+div[data-baseweb="slider"] *,
+div[data-baseweb="select"] *,
+div[data-baseweb="radio"] *,
 div[data-baseweb="input"] * {{
     color: {font_color} !important;
 }}
 
-/* Titres des graphiques */
-h1, h2, h3, h4 {{
+/* Titres */
+h1,h2,h3,h4 {{
     color: {header_color};
 }}
 
-/* Toggle bouton personnalisé */
+/* Toggle bouton */
 div[role="switch"] > div {{
     background-color: {"#444" if theme_choice=="Sombre" else "#ccc"} !important;
 }}
@@ -149,7 +146,7 @@ div[role="switch"] > div {{
 #====================================================================
 st.title("📊 Dashboard Suivi du MGG")
 total = len(df_filtered)
-acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])] )
+acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])])
 en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
 a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 
