@@ -68,53 +68,66 @@ st.sidebar.markdown("---")
 plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 theme_choice = st.sidebar.radio("🖌️ Apparence :", ["Sombre", "Clair"])
 
-# --------- Couleurs ---------
+# Définition des couleurs selon le thème
 if theme_choice == "Sombre":
     page_bg = "#1a1d21"
     sidebar_bg = "#2c2f33"
     text_color = "#ffffff"
-    widget_text_color = "#000000"  # texte intérieur des widgets
+    sidebar_text_color = "#ffffff"
     header_color = "#00ccff"
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
+    sidebar_widget_bg = "#e0e0e0"      # fond clair pour widgets
+    sidebar_widget_text = "#000000"    # texte sombre pour lisibilité
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
     text_color = "#1a1a1a"
-    widget_text_color = "#000000"
+    sidebar_text_color = "#1a1a1a"
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
+    sidebar_widget_bg = "#ffffff"      # fond blanc pour widgets
+    sidebar_widget_text = "#0000ff"    # texte bleu pour widgets
 
 page_width = "100%" if plein_ecran else "80%"
 
-# --------- CSS pour sidebar + widgets ---------
+# Application du style CSS
 st.markdown(f"""
 <style>
+    /* Application générale */
     .stApp {{
         background-color: {page_bg};
         color: {text_color};
         max-width: {page_width};
-        margin:auto;
+        margin: auto;
     }}
+
+    /* Sidebar */
     section[data-testid="stSidebar"] {{
         background-color: {sidebar_bg};
-        color: {text_color};
+        color: {sidebar_text_color};
     }}
+
+    /* Tous les textes de la sidebar */
     section[data-testid="stSidebar"] * {{
-        color: {text_color} !important;
+        color: {sidebar_text_color} !important;
     }}
 
-    /* Widget texte intérieur (multiselect, upload_file, selectbox...) */
-    section[data-testid="stSidebar"] input,
-    section[data-testid="stSidebar"] select,
-    section[data-testid="stSidebar"] textarea,
-    section[data-testid="stSidebar"] div[role='listbox'],
-    section[data-testid="stSidebar"] label {{
-        color: {widget_text_color} !important;
+    /* Multiselect / selectbox */
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div > div {{
+        background-color: {sidebar_widget_bg} !important;
+        color: {sidebar_widget_text} !important;
     }}
 
-    h1,h2,h3,h4 {{
+    /* File uploader */
+    section[data-testid="stSidebar"] div[data-testid="stFileUploader"] > div > div {{
+        background-color: {sidebar_widget_bg} !important;
+        color: {sidebar_widget_text} !important;
+    }}
+
+    /* Titres des graphiques */
+    h1, h2, h3, h4 {{
         color: {header_color};
     }}
 </style>
