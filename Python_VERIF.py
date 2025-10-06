@@ -125,7 +125,7 @@ h1,h2,h3,h4 {{
 #====================================================================
 st.title("📊 Dashboard Suivi du MGG")
 total = len(df_filtered)
-acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])])
+acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])] )
 en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
 a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 
@@ -196,7 +196,7 @@ fig_nature = px.histogram(
     color_discrete_map=colors_map_statut, height=400
 )
 fig_nature.update_traces(marker_line_width=0)
-fig_nature.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="#888888")
+fig_nature.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="#888888")  # <-- lignes horizontales visibles
 fig_nature.update_layout(
     title_font=dict(color=font_color, size=18),
     xaxis_title="Nombre", yaxis_title="Nature de griefs",
@@ -245,7 +245,7 @@ fig_cat_sexe = px.bar(
     template=plotly_template, text="Nombre", height=400
 )
 fig_cat_sexe.update_traces(marker_line_width=0)
-fig_cat_sexe.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="#888888")
+fig_cat_sexe.update_xaxes(showgrid=True, gridwidth=0.5, gridcolor="#888888")  # <-- lignes horizontales visibles
 fig_cat_sexe.update_layout(
     title="Nature des griefs par sexe",
     title_font=dict(color=font_color, size=18),
