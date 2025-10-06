@@ -87,7 +87,7 @@ else:
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
-    sidebar_widget_bg = "#ffffff"      # fond blanc pour widgets
+    sidebar_widget_bg = "#e0e0e0"      # fond blanc pour widgets
     sidebar_widget_text = "#000000"    # texte bleu pour widgets
 
 page_width = "100%" if plein_ecran else "80%"
