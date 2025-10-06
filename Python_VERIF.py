@@ -69,16 +69,7 @@ plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 theme_choice = st.sidebar.radio("🖌️ Apparence :", ["Sombre", "Clair"])
 
 # Définition des couleurs selon le thème
-if theme_choice == "Sombre":
-    page_bg = "#1a1d21"
-    sidebar_bg = "#2c2f33"
-    sidebar_text_color = "#ffffff"
-    header_color = "#00ccff"
-    card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
-    plotly_template = "plotly_dark"
-    graph_bg_color = "#2b2d33"
-    font_color = "#ffffff"
-else:
+if theme_choice == "Clair":
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
     sidebar_text_color = "#1a1a1a"
@@ -87,6 +78,16 @@ else:
     plotly_template = "plotly_white"
     graph_bg_color = "#f0f0f5"
     font_color = "#000000"
+    
+else:
+    page_bg = "#1a1d21"
+    sidebar_bg = "#2c2f33"
+    sidebar_text_color = "#ffffff"
+    header_color = "#00ccff"
+    card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
+    plotly_template = "plotly_dark"
+    graph_bg_color = "#2b2d33"
+    font_color = "#ffffff"
 
 # Widgets sidebar adaptés au thème
 sidebar_widget_bg = sidebar_bg
