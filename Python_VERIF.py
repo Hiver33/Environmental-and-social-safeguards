@@ -125,7 +125,7 @@ metrics = [(total,"Total"),(acheves,"Achevés"),(en_cours,"En cours"),(a_traiter
 
 for col,(val,label),color in zip(cols,metrics,card_colors):
     col.markdown(f"""
-        <div style='background:{color}; padding:15px; border-radius:15px; text-align:center;'>
+        <div style='background:{color}; padding:15px; border-radius:15px; text-align:left;'>
             <p style='font-size:28px; font-weight:bold; color:black;'>{val}</p>
             <p style='font-weight:bold; color:black;'>{label}</p>
         </div>
