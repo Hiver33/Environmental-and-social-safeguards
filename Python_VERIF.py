@@ -63,6 +63,44 @@ if df_filtered.empty:
     st.stop()
 
 #====================================================================
+# ----------------------------- Thème -------------------------------
+#====================================================================
+page_width = "100%" if plein_ecran else "80%"
+theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair"])
+
+if theme_choice == "Sombre":
+    page_bg = "#1a1d21"
+    text_color = "white"
+    header_color = "#00ccff"
+    sidebar_bg = "#1a1d21"
+    card_colors = ["#00ccff","#00ff99","#ffcc00","#ff6666"]
+    plotly_template = "plotly_dark"
+else:
+    page_bg = "#f5f5f5"
+    text_color = "#000000"
+    header_color = "#1a1a1a"
+    sidebar_bg = "#e8e8e8"
+    card_colors = ["#87CEFA","#90EE90","#FFD700","#FF7F7F"]
+    plotly_template = "plotly_white"
+
+# -------------------- Appliquer CSS --------------------
+st.markdown(f"""
+<style>
+.stApp {{
+    background-color:{page_bg};
+    color:{text_color};
+    max-width:{page_width};
+    margin:auto;
+}}
+h1,h2,h3{{color:{header_color};}}
+[data-testid="stSidebar"] {{
+    background-color: {sidebar_bg};
+    color: {text_color};
+}}
+</style>
+""", unsafe_allow_html=True)
+
+#====================================================================
 # -------------------------- Indicateurs ----------------------------
 #====================================================================
 st.title("📊 Dashboard Suivi du MGG")
@@ -74,36 +112,9 @@ a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 cols = st.columns(4)
 metrics = [(total,"Total"),(acheves,"Achevés"),(en_cours,"En cours"),(a_traiter,"A traiter")]
 
-#====================================================================
-# ----------------------------- Thème -------------------------------
-#====================================================================
-page_width = "100%" if plein_ecran else "80%"
-theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair"])
-
-if theme_choice == "Sombre":
-    page_bg = "#1a1d21"
-    text_color = "white"
-    header_color = "#00ccff"
-    card_colors = ["#00ccff","#00ff99","#ffcc00","#ff6666"]
-    plotly_template = "plotly_dark"
-else:
-    page_bg = "#f5f5f5"
-    text_color = "#1a1a1a"
-    header_color = "#1a73e8"
-    card_colors = ["#87CEFA","#90EE90","#FFD700","#FF7F7F"]
-    plotly_template = "plotly_white"
-
-st.markdown(f"""
-<style>
-.stApp {{ background-color:{page_bg}; color:{text_color}; max-width:{page_width}; margin:auto; }}
-h1,h2,h3{{color:{header_color};}}
-</style>
-""", unsafe_allow_html=True)
-
-# ------------------- Indicateurs avec couleurs dynamiques -------------------
 for col,(val,label),color in zip(cols,metrics,card_colors):
     col.markdown(f"""
-        <div style='background:{color}; padding:15px; border-radius:15px;'>
+        <div style='background:{color}; padding:15px; border-radius:15px; border:1px solid grey;'>
             <p style='font-size:28px; font-weight:bold; color:black'>{val}</p>
             <p style='font-weight:bold; color:black'>{label}</p>
         </div>
@@ -114,17 +125,21 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 #====================================================================
 st.subheader("📈 Analyse visuelle")
 
+# Histogramme Top N Slider avant évolution temporelle
+top_n = st.slider("Top N natures :", 3, 10, 5)
+trimestres = sorted(df_filtered["Trimestre"].unique())
+trimestre_sel = st.selectbox("Filtrer par trimestre :", ["Tous"]+trimestres)
+df_trim = df_filtered if trimestre_sel=="Tous" else df_filtered[df_filtered["Trimestre"]==trimestre_sel]
+top_natures = df_trim["Nature_plainte"].value_counts().nlargest(top_n).index
+
 # Répartition par type
 type_counts = df_filtered["Type_depot"].value_counts().sort_values()
 fig_type = px.bar(
     x=type_counts.index, y=type_counts.values, text=type_counts.values,
-    title="Répartition par type de dépôt", template=plotly_template, height=400
+    title="Répartition par type de dépôt", template=plotly_template, height=400,
+    labels={"x":"Type de dépôt","y":"Nombre de griefs"}
 )
-fig_type.update_layout(
-    xaxis_title="Type de dépôt",
-    yaxis_title="Nombre de griefs",
-    legend_title_text="Statut du traitement"
-)
+fig_type.update_layout(plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color)
 
 # Avancement général
 colors_map_statut = {
@@ -139,6 +154,7 @@ fig_stat = px.pie(
     template=plotly_template, height=400
 )
 fig_stat.update_traces(textinfo="percent+label", textposition="inside")
+fig_stat.update_layout(plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color)
 
 # Affichage côte à côte ou plein écran
 if plein_ecran:
@@ -154,16 +170,17 @@ ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.
 fig_nature = px.histogram(
     df_filtered, y="Nature_plainte", color="Statut_traitement", text_auto=True,
     category_orders={"Nature_plainte": ordre_nature}, orientation="h",
-    title = "Nombre de griefs par nature", template=plotly_template, height=400, color_discrete_map=colors_map_statut
+    title="Nombre de griefs par nature", template=plotly_template, height=400, color_discrete_map=colors_map_statut
 )
 fig_nature.update_layout(
     xaxis_title="Nature de griefs",
     yaxis_title="Nombre",
-    legend_title_text="Statut du traitement"
+    legend_title_text="Statut du traitement",
+    plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color
 )
 st.plotly_chart(fig_nature, use_container_width=True)
 
-# Répartition Communauté / Sexe
+# Communauté / Sexe
 st.subheader("🏘️ Répartition par communauté et sexe")
 if plein_ecran:
     fig_comm = px.bar(
@@ -172,13 +189,15 @@ if plein_ecran:
         text=df_filtered["Communaute"].value_counts().sort_values().values,
         title="Nombre de griefs par communauté", template=plotly_template, height=400
     )
-    fig_comm.update_layout(xaxis_title="Village/Localité", yaxis_title="Nombre de griefs")
+    fig_comm.update_layout(xaxis_title="Village/Localité", yaxis_title="Nombre de griefs",
+                           plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color)
     st.plotly_chart(fig_comm, use_container_width=True)
 
     fig_sexe = px.pie(
         df_filtered, names="Sexe", title="Répartition par sexe", template=plotly_template, height=400
     )
     fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
+    fig_sexe.update_layout(plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color)
     st.plotly_chart(fig_sexe, use_container_width=True)
 else:
     c1, c2 = st.columns(2)
@@ -188,12 +207,15 @@ else:
         text=df_filtered["Communaute"].value_counts().sort_values().values,
         title="Nombre de griefs par communauté", template=plotly_template, height=400
     )
-    fig_comm.update_layout(xaxis_title="Village/Localité", yaxis_title="Nombre de griefs", legend_title_text="Sexe")
+    fig_comm.update_layout(xaxis_title="Village/Localité", yaxis_title="Nombre de griefs",
+                           legend_title_text="Sexe", plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color)
 
     fig_sexe = px.pie(
         df_filtered, names="Sexe", title="Répartition par sexe", template=plotly_template, height=400
     )
     fig_sexe.update_traces(textinfo="percent+label", textposition="inside")
+    fig_sexe.update_layout(plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color)
+
     c1.plotly_chart(fig_comm, use_container_width=True)
     c2.plotly_chart(fig_sexe, use_container_width=True)
 
@@ -207,23 +229,20 @@ fig_cat_sexe = px.bar(
     orientation="h", template=plotly_template, height=400, text="Nombre",
     color_discrete_sequence=px.colors.qualitative.Plotly
 )
-fig_cat_sexe.update_layout(xaxis_title="Nombre", yaxis_title="Nature de griefs")
+fig_cat_sexe.update_layout(xaxis_title="Nombre", yaxis_title="Nature de griefs",
+                           plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color)
 fig_cat_sexe.update_traces(textposition="inside")
 st.plotly_chart(fig_cat_sexe, use_container_width=True)
 
-# Evolution Top N
+# Evolution temporelle
 st.subheader("📈 Évolution temporelle des griefs")
-top_n = st.slider("Top N natures :", 3, 10, 5)
-trimestres = sorted(df_filtered["Trimestre"].unique())
-trimestre_sel = st.selectbox("Filtrer par trimestre :", ["Tous"]+trimestres)
-df_trim = df_filtered if trimestre_sel=="Tous" else df_filtered[df_filtered["Trimestre"]==trimestre_sel]
-top_natures = df_trim["Nature_plainte"].value_counts().nlargest(top_n).index
 df_line = df_trim[df_trim["Nature_plainte"].isin(top_natures)].groupby(["Mois","Nature_plainte"]).size().reset_index(name="Nombre")
 fig_line = px.line(
     df_line, x="Mois", y="Nombre", color="Nature_plainte", markers=True,
     title=f"Top {top_n} évolution", template=plotly_template, height=400
 )
-fig_line.update_layout(legend_title_text="Nature de griefs")
+fig_line.update_layout(legend_title_text="Nature de griefs",
+                       plot_bgcolor=page_bg, paper_bgcolor=page_bg, font_color=text_color)
 fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
 st.plotly_chart(fig_line, use_container_width=True)
 
@@ -234,7 +253,9 @@ if "Nb_jour" in df_trim.columns:
         df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
         title="Durée moyenne de traitement par nature", template=plotly_template, height=400
     )
-    fig_duree.update_layout(xaxis_title="Nature de griefs", yaxis_title="Durée (Nb de jours)", legend_title_text="Nature de griefs")
+    fig_duree.update_layout(xaxis_title="Nature de griefs", yaxis_title="Durée (Nb de jours)",
+                            legend_title_text="Nature de griefs", plot_bgcolor=page_bg,
+                            paper_bgcolor=page_bg, font_color=text_color)
     st.plotly_chart(fig_duree, use_container_width=True)
 
 # Tableau final
