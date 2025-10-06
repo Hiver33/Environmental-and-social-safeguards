@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 
-# Chargement des données
+# -------------------- Chargement des données --------------------
 @st.cache_data(ttl=300)
 def load_data(path):
     try:
@@ -21,10 +21,12 @@ url_excel = "https://www.dropbox.com/scl/fi/ygl4aceq4uiuqt857hykc/Table_MGG.xlsx
 uploaded_file = st.sidebar.file_uploader("Choisir un fichier Excel (.xlsx)", type=["xlsx"])
 df = load_data(uploaded_file if uploaded_file else url_excel)
 
+# -------------------- Vérification des colonnes --------------------
 cols_req = ["Type_depot","Statut_traitement","Nature_plainte","Categorie","Date_reception","Nb_jour","Communaute","Sexe"]
 if df.empty or not all(col in df.columns for col in cols_req):
     st.stop()
 
+# -------------------- Préparation --------------------
 df["Date_reception"] = pd.to_datetime(df["Date_reception"], errors="coerce", dayfirst=True)
 df = df.dropna(subset=["Date_reception"])
 df["Année"] = df["Date_reception"].dt.year
@@ -63,19 +65,17 @@ if theme_choice == "Sombre":
     plotly_template = "plotly_dark"
     plot_bg = "#1a1d21"
     paper_bg = "#1a1d21"
-    table_bg = "#1a1d21"
     sidebar_bg = "#111318"
     sidebar_text = "white"
 else:
     # Thème clair harmonieux
-    page_bg = "#f5f5f5"        # fond global
-    text_color = "#333333"     # texte lisible
-    header_color = "#1a73e8"   # titres
-    card_colors = ["#A8D5BA","#FFD8A9","#FFAAA7","#B5EAEA"] # cartes douces pastel
+    page_bg = "#f5f5f5"
+    text_color = "#333333"
+    header_color = "#1a73e8"
+    card_colors = ["#A8D5BA","#FFD8A9","#FFAAA7","#B5EAEA"]
     plotly_template = "plotly"
     plot_bg = "#f5f5f5"
     paper_bg = "#f5f5f5"
-    table_bg = "#f5f5f5"
     sidebar_bg = "#e6e6e6"
     sidebar_text = "#333333"
 
@@ -84,8 +84,8 @@ st.markdown(f"""
 <style>
 .stApp {{ background-color:{page_bg}; color:{text_color}; max-width:{page_width}; margin:auto; }}
 h1,h2,h3{{color:{header_color};}}
-.dataframe tbody tr td {{ background-color: {table_bg}; color: {text_color}; }}
-[data-testid="stSidebar"] {{ background-color: {sidebar_bg}; color: {sidebar_text}; }}
+.dataframe tbody tr td {{ background-color:{paper_bg}; color:{text_color}; }}
+[data-testid="stSidebar"] {{ background-color:{sidebar_bg}; color:{sidebar_text}; }}
 [data-testid="stSidebar"] .stTextInput>div>input,
 [data-testid="stSidebar"] .stSelectbox>div>div,
 [data-testid="stSidebar"] .stMultiselect>div>div {{ background-color: {sidebar_bg}; color:{sidebar_text}; }}
@@ -175,8 +175,10 @@ fig_cat_sexe = px.bar(
 fig_cat_sexe.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color)
 fig_cat_sexe.update_traces(textposition="inside")
 
-# Top N évolution temporelle
+# ==================== Slider Top N ====================
 top_n = st.slider("Top N natures :", 3, 10, 5)
+
+# Top N évolution temporelle
 trimestres = sorted(df_filtered["Trimestre"].unique())
 trimestre_sel = st.selectbox("Filtrer par trimestre :", ["Tous"]+trimestres)
 df_trim = df_filtered if trimestre_sel=="Tous" else df_filtered[df_filtered["Trimestre"]==trimestre_sel]
@@ -198,7 +200,7 @@ if "Nb_jour" in df_trim.columns:
     )
     fig_duree.update_layout(plot_bgcolor=plot_bg, paper_bgcolor=paper_bg, font_color=text_color)
 
-# Affichage graphique
+# ==================== AFFICHAGE ====================
 if plein_ecran:
     for g in [fig_type, fig_stat, fig_nature, fig_comm, fig_sexe, fig_cat_sexe, fig_line]:
         st.plotly_chart(g, use_container_width=True)
@@ -216,6 +218,6 @@ else:
     if "Nb_jour" in df_trim.columns:
         st.plotly_chart(fig_duree, use_container_width=True)
 
-# Tableau final
+# ==================== TABLEAU ====================
 st.subheader("📋 Aperçu des données")
 st.dataframe(df_filtered, use_container_width=True)
