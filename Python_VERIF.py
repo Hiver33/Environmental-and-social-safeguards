@@ -123,11 +123,11 @@ en_cours = len(df_filtered[df_filtered["Statut_traitement"]=="En cours"])
 a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 
 # Indicateurs à gauche
-left, mid1, mid2, right = st.columns([1.5, 1, 1, 1])
+left, mid1, mid2, right = st.columns([1, 1, 1, 1])
 metrics = [(total,"Total"),(acheves,"Achevés"),(en_cours,"En cours"),(a_traiter,"A traiter")]
 for col,(val,label),color in zip([left, mid1, mid2, right],metrics,card_colors):
     col.markdown(f"""
-        <div style='background:{color}; padding:15px; border-radius:15px; text-align:center;'>
+        <div style='background:{color}; padding:15px; border-radius:15px; text-align:left;'>
             <p style='font-size:28px; font-weight:bold; color:black;'>{val}</p>
             <p style='font-weight:bold; color:black;'>{label}</p>
         </div>
