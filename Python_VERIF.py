@@ -70,7 +70,7 @@ theme_choice = st.sidebar.radio("🖌️ Apparence :", ["Sombre", "Clair"])
 
 # Définition des couleurs selon le thème
 if theme_choice == "Sombre":
-    page_bg = "black"
+    page_bg = "#1a1d21"
     sidebar_bg = "#2c2f33"
     text_color = "#ffffff"
     sidebar_text_color = "#ffffff"
