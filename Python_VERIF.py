@@ -77,6 +77,9 @@ metrics = [(total,"Total"),(acheves,"Achevés"),(en_cours,"En cours"),(a_traiter
 #====================================================================
 # ----------------------------- Thème -------------------------------
 #====================================================================
+#====================================================================
+# ----------------------------- Thème -------------------------------
+#====================================================================
 page_width = "100%" if plein_ecran else "80%"
 theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair"])
 
@@ -84,30 +87,40 @@ if theme_choice == "Sombre":
     page_bg = "#1a1d21"
     text_color = "white"
     header_color = "#00ccff"
-    card_colors = ["#00ccff","#00ff99","#ffcc00","#ff6666"]
+    card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
+    sidebar_bg = "#111418"
+    sidebar_text = "white"
 else:
-    page_bg = "#f5f5f5"
-    text_color = "#1a1a1a"
-    header_color = "#1a73e8"
-    card_colors = ["#87CEFA","#90EE90","#FFD700","#FF7F7F"]
+    page_bg = "#f5f5f5"            # fond principal clair
+    text_color = "#1a1a1a"         # texte noir
+    header_color = "#1a73e8"       # bleu doux
+    card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
+    sidebar_bg = "#d9d9d9"         # gris clair (au lieu de blanc)
+    sidebar_text = "#1a1a1a"       # texte noir
 
+# ---- Application des styles ----
 st.markdown(f"""
-<style>
-.stApp {{ background-color:{page_bg}; color:{text_color}; max-width:{page_width}; margin:auto; }}
-h1,h2,h3{{color:{header_color};}}
-</style>
+    <style>
+    .stApp {{
+        background-color: {page_bg};
+        color: {text_color};
+        max-width: {page_width};
+        margin: auto;
+    }}
+    h1, h2, h3 {{
+        color: {header_color};
+    }}
+    /* ---------- Sidebar custom ---------- */
+    section[data-testid="stSidebar"] {{
+        background-color: {sidebar_bg};
+    }}
+    section[data-testid="stSidebar"] * {{
+        color: {sidebar_text} !important;
+    }}
+    </style>
 """, unsafe_allow_html=True)
-
-# ------------------- Indicateurs avec couleurs dynamiques -------------------
-for col,(val,label),color in zip(cols,metrics,card_colors):
-    col.markdown(f"""
-        <div style='background:{color}; padding:15px; border-radius:15px;'>
-            <p style='font-size:28px; font-weight:bold; color:black'>{val}</p>
-            <p style='font-weight:bold; color:black'>{label}</p>
-        </div>
-    """, unsafe_allow_html=True)
 
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
