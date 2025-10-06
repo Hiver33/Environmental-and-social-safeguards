@@ -41,35 +41,53 @@ df["Trimestre"] = df["Date_reception"].dt.to_period("Q").astype(str)
 df["Mois"] = df["Date_reception"].dt.to_period("M").dt.to_timestamp()
 
 #====================================================================
-# ----------------------------- Thème -------------------------------
+# ---------------------- Apparence / Thème --------------------------
 #====================================================================
+st.sidebar.markdown("---")
 st.sidebar.header("🖌️ Apparence")
 
+# Choix du thème
 theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Sombre", "Clair"])
 
+# Choix du mode plein écran
+plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
+
+# Couleurs selon le thème
 if theme_choice == "Sombre":
-    page_bg = "#1a1d21"
-    sidebar_bg = "#2c2f33"
+    page_bg = "#1a1d21"          # fond sombre principal
+    sidebar_bg = "#2c2f33"       # sidebar plus sombre
     text_color = "#ffffff"
     header_color = "#00ccff"
+    card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
 else:
-    page_bg = "#f0f0f0"          # gris clair doux
+    page_bg = "#f5f5f5"          # fond gris clair
     sidebar_bg = "#dcdcdc"       # gris moyen
-    text_color = "#000000"       # noir
-    header_color = "#0056b3"     # bleu profond harmonieux
+    text_color = "#1a1a1a"       # texte noir doux
+    header_color = "#1a73e8"     # bleu doux
+    card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
 
-# CSS : fond général + sidebar harmonisée
+# Largeur de la page selon le mode
+page_width = "100%" if plein_ecran else "80%"
+
+# Application du style CSS global
 st.markdown(f"""
 <style>
+    /* Fond général */
     .stApp {{
         background-color: {page_bg};
         color: {text_color};
+        max-width: {page_width};
+        margin: auto;
     }}
+    
+    /* Sidebar */
     section[data-testid="stSidebar"] {{
         background-color: {sidebar_bg};
     }}
+    
+    /* Titres */
     h1, h2, h3, h4 {{
         color: {header_color};
     }}
