@@ -139,11 +139,6 @@ h1,h2,h3,h4 {{
 div[role="switch"] > div {{
     background-color: {"#444" if theme_choice=="Sombre" else "#ccc"} !important;
 }}
-.stFileUploader {
-            background-color: #f4f4f9; /* Remplacez par votre couleur préférée */
-            border-radius: 5px; /* Exemple de personnalisation supplémentaire */
-            padding: 10px;
-        }
 </style>
 """, unsafe_allow_html=True)
 
