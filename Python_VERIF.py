@@ -66,54 +66,55 @@ if df_filtered.empty:
 #====================================================================
 st.sidebar.markdown("---")
 plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
-
 theme_choice = st.sidebar.radio("🖌️ Apparence :", ["Sombre", "Clair"])
 
+# --------- Couleurs ---------
 if theme_choice == "Sombre":
     page_bg = "#1a1d21"
     sidebar_bg = "#2c2f33"
     text_color = "#ffffff"
-    sidebar_text_color = "#ffffff"
+    widget_text_color = "#000000"  # texte intérieur des widgets
     header_color = "#00ccff"
     card_colors = ["#00ccff", "#00ff99", "#ffcc00", "#ff6666"]
     plotly_template = "plotly_dark"
-    # texte sombre dans les widgets sidebar
-    widget_text_color = "black"
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
     text_color = "#1a1a1a"
-    sidebar_text_color = "#1a1a1a"
+    widget_text_color = "#000000"
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
     plotly_template = "plotly_white"
-    widget_text_color = "black"
 
 page_width = "100%" if plein_ecran else "80%"
 
-# Application du style
+# --------- CSS pour sidebar + widgets ---------
 st.markdown(f"""
 <style>
     .stApp {{
         background-color: {page_bg};
         color: {text_color};
         max-width: {page_width};
-        margin: auto;
+        margin:auto;
     }}
     section[data-testid="stSidebar"] {{
         background-color: {sidebar_bg};
-        color: {sidebar_text_color};
+        color: {text_color};
     }}
     section[data-testid="stSidebar"] * {{
-        color: {sidebar_text_color} !important;
+        color: {text_color} !important;
     }}
-    /* Texte sombre dans upload et multiselect */
-    section[data-testid="stSidebar"] div[data-baseweb="select"] > div,
+
+    /* Widget texte intérieur (multiselect, upload_file, selectbox...) */
     section[data-testid="stSidebar"] input,
-    section[data-testid="stSidebar"] textarea {{
+    section[data-testid="stSidebar"] select,
+    section[data-testid="stSidebar"] textarea,
+    section[data-testid="stSidebar"] div[role='listbox'],
+    section[data-testid="stSidebar"] label {{
         color: {widget_text_color} !important;
     }}
-    h1, h2, h3, h4 {{
+
+    h1,h2,h3,h4 {{
         color: {header_color};
     }}
 </style>
@@ -165,9 +166,10 @@ fig_stat = px.pie(
     color="Statut_traitement", color_discrete_map=colors_map_statut,
     template=plotly_template, height=400
 )
-fig_stat.update_layout(title_font=dict(color="#1a73e8", size=18))
 fig_stat.update_traces(textinfo="percent+label", textposition="inside")
+fig_stat.update_layout(title_font=dict(color="#1a73e8", size=18))
 
+# Affichage graphique
 if plein_ecran:
     st.plotly_chart(fig_type, use_container_width=True)
     st.plotly_chart(fig_stat, use_container_width=True)
@@ -186,7 +188,8 @@ fig_nature = px.histogram(
 )
 fig_nature.update_layout(
     title_font=dict(color="#1a73e8", size=18),
-    xaxis_title="Nature de griefs", yaxis_title="Nombre"
+    xaxis_title="Nature de griefs", yaxis_title="Nombre",
+    legend_title_text="Statut du traitement"
 )
 st.plotly_chart(fig_nature, use_container_width=True)
 
