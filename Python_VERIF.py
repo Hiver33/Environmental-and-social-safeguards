@@ -80,7 +80,7 @@ if theme_choice == "Sombre":
 else:
     page_bg = "#f5f5f5"
     sidebar_bg = "#dcdcdc"
-    text_color = "#1a1a1a"
+    text_color = "#1a1d21"
     sidebar_text_color = "#1a1a1a"
     header_color = "#1a73e8"
     card_colors = ["#87CEFA", "#90EE90", "#FFD700", "#FF7F7F"]
