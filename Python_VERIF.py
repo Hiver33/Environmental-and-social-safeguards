@@ -192,7 +192,7 @@ else:
 # --- Répartition par Type de population et Sexe ---
 # --- Filtre d'affichage du genre ---
 genre_mode = st.radio(
-    "Affichage du genre :",
+    "Affichage du genre (H/F):",
     ["Tout genre", "Catégoriser"],
     index=0,
     horizontal=True
