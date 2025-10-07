@@ -190,14 +190,14 @@ else:
     
 # --- Répartition par type de population ---
 df_pop_sexe = df_filtered.groupby(["Type", "Sexe"]).size().reset_index(name = "Nombre")
-ordre_tri = df_pop_sexe.groupby("Type")["Nrombre"].sum().sort_values().index.tolist()
+ordre_tri = df_pop_sexe.groupby("Type")["Nombre"].sum().sort_values().index.tolist()
 fig_pop_sexe = px.bar(
     x="Type", y="Nombre", color = "Sexe", text="Nombre",
     title="Répartition par type de population", template=plotly_template, height=400,
-    category_order = {"Type", df_pop_sexe},    # tri croissant
+    category_order = {"Type", df_pop_sexe}    # tri croissant
 )
-fig_type.update_traces(marker_line_width=0)
-fig_type.update_layout(
+fig_pop_sexe.update_traces(marker_line_width=0)
+fig_pop_sexe.update_layout(
     title_font=dict(color=font_color, size=18),
     xaxis_title="Type de population", yaxis_title="Nombre de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
