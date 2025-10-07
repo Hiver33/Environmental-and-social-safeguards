@@ -201,6 +201,8 @@ fig_type.update_layout(
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
+st.plotly_chart(fig_type, use_container_width=True)
+
 # --- Histogramme par nature ---
 ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.tolist()
 fig_nature = px.histogram(
