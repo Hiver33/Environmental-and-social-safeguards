@@ -194,7 +194,7 @@ ordre_tri = df_pop_sexe.groupby("Type")["Nombre"].sum().sort_values().index.toli
 fig_pop_sexe = px.bar(
     x="Type", y="Nombre", color = "Sexe", text="Nombre",
     title="Répartition par type de population", template=plotly_template, height=400,
-    category_orders = {"Type": df_pop_sexe}    # tri croissant
+    category_orders = {"Type": ordre_tri}    # tri croissant
 )
 fig_pop_sexe.update_traces(marker_line_width=0)
 fig_pop_sexe.update_layout(
