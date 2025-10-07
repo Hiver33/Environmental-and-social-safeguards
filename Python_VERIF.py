@@ -152,7 +152,7 @@ colors_map_statut = {
     "En cours": "#636efa",
     "A traiter": "#ff6666"
 }
-
+#-------------------------------------------------------------------------------------
 # --- Répartition par type de dépôt ---
 type_counts = df_filtered["Type_depot"].value_counts().sort_values()
 fig_type = px.bar(
@@ -187,15 +187,26 @@ else:
     c1, c2 = st.columns(2)
     c1.plotly_chart(fig_type, use_container_width=True)
     c2.plotly_chart(fig_stat, use_container_width=True)
-    
-# --- Répartition par type de population ---
-df_pop_sexe = df_filtered.groupby(["Type", "Sexe"]).size().reset_index(name = "Nombre")
-ordre_tri = df_pop_sexe.groupby("Type")["Nombre"].sum().sort_values().index.tolist()
-fig_pop_sexe = px.bar(
-    x="Type", y="Nombre", color = "Sexe", text="Nombre",
-    title="Répartition par type de population", template=plotly_template, height=400,
-    category_orders = {"Type": ordre_tri}    # tri croissant
+#-------------------------------------------------------------------------------------
+
+# --- Répartition par Type de population et Sexe ---
+df_pop_sexe = df_filtered.groupby(["Type", "Sexe"]).size().reset_index(name="Nombre")
+
+# Créer l'ordre croissant basé sur le total des griefs par type
+ordre_tri = (
+    df_pop_sexe.groupby("Type")["Nombre"].sum().sort_values().index.tolist()
 )
+
+# Créer le graphique
+fig_pop_sexe = px.bar(
+    df_pop_sexe,
+    x="Type", y="Nombre", color="Sexe", text="Nombre",
+    title="Répartition par type de population", template=plotly_template, height=400,
+    category_orders={"Type": ordre_tri},  # ✅ ici on met la liste ordre_tri
+    barmode="group"  # barres côte à côte
+)
+
+# Style du graphique
 fig_pop_sexe.update_traces(marker_line_width=0)
 fig_pop_sexe.update_layout(
     title_font=dict(color=font_color, size=18),
@@ -203,7 +214,10 @@ fig_pop_sexe.update_layout(
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
+
+# Affichage dans Streamlit
 st.plotly_chart(fig_pop_sexe, use_container_width=True)
+#-------------------------------------------------------------------------------------
 
 # --- Histogramme par nature ---
 ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.tolist()
@@ -213,6 +227,7 @@ fig_nature = px.histogram(
     title="Nombre de griefs par nature", template=plotly_template,
     color_discrete_map=colors_map_statut, height=400
 )
+# Style du graphique
 fig_nature.update_traces(marker_line_width=0)
 fig_nature.update_layout(
     title_font=dict(color=font_color, size=18),
@@ -221,17 +236,21 @@ fig_nature.update_layout(
     font=dict(color=font_color)
 )
 st.plotly_chart(fig_nature, use_container_width=True)
+#-------------------------------------------------------------------------------------
 
 # --- Répartition Communauté / Sexe ---
 st.subheader("🏘️ Répartition par communauté et sexe")
 c1, c2 = st.columns(2)
 
+# Graphique bar
 fig_comm = px.bar(
     x=df_filtered["Communaute"].value_counts().sort_values().index,
     y=df_filtered["Communaute"].value_counts().sort_values().values,
     text=df_filtered["Communaute"].value_counts().sort_values().values,
     title="Nombre de griefs par communauté", template=plotly_template, height=400
 )
+
+# Style du graphique
 fig_comm.update_traces(marker_line_width=0)
 fig_comm.update_layout(
     title_font=dict(color=font_color, size=18),
@@ -239,18 +258,22 @@ fig_comm.update_layout(
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
-c1.plotly_chart(fig_comm, use_container_width=True)
+c1.plotly_chart(fig_comm, use_container_width=True)    # affichage dans srtreamlit
 
+# Graphique pie
 fig_sexe = px.pie(
     df_filtered, names="Sexe", title="Répartition par sexe", template=plotly_template, height=400
 )
+
+# Style du graphique
 fig_sexe.update_traces(textinfo="percent+label", textposition="inside", marker_line_width=0)
 fig_sexe.update_layout(
     title_font=dict(color=font_color, size=18),
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
-c2.plotly_chart(fig_sexe, use_container_width=True)
+c2.plotly_chart(fig_sexe, use_container_width=True)    # affichage dans srtreamlit
+#-------------------------------------------------------------------------------------
 
 # --- Nature par Sexe ---
 st.subheader("👥 Nature des griefs par sexe")
@@ -261,6 +284,8 @@ fig_cat_sexe = px.bar(
     category_orders={"Nature_plainte": ordre_nature_tri}, orientation="h",
     template=plotly_template, text="Nombre", height=400
 )
+
+# Style du graphique
 fig_cat_sexe.update_traces(marker_line_width=0)
 fig_cat_sexe.update_layout(
     title="Nature des griefs par sexe",
@@ -269,7 +294,8 @@ fig_cat_sexe.update_layout(
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
-st.plotly_chart(fig_cat_sexe, use_container_width=True)
+st.plotly_chart(fig_cat_sexe, use_container_width=True)    # affichage dans srtreamlit
+#-------------------------------------------------------------------------------------
 
 # --- Évolution temporelle ---
 st.subheader("📈 Évolution temporelle des griefs")
@@ -287,8 +313,11 @@ fig_line.update_layout(
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
+
+# Style du graphique
 fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
-st.plotly_chart(fig_line, use_container_width=True)
+st.plotly_chart(fig_line, use_container_width=True)    # affichage dans srtreamlit
+#-------------------------------------------------------------------------------------
 
 # --- Durée moyenne ---
 if "Nb_jour" in df_trim.columns:
@@ -296,13 +325,15 @@ if "Nb_jour" in df_trim.columns:
     fig_duree = px.bar(df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
         title="Durée moyenne de traitement par nature", template=plotly_template, height=400)
     fig_duree.update_traces(marker_line_width=0)
+    
+    # Style du graphique
     fig_duree.update_layout(
         title_font=dict(color=font_color, size=18),
         xaxis_title="Nature de griefs", yaxis_title="Durée (jours)",
         plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
         font=dict(color=font_color)
     )
-    st.plotly_chart(fig_duree, use_container_width=True)
+    st.plotly_chart(fig_duree, use_container_width=True)    # affichage dans srtreamlit
 
 #====================================================================
 # ------------------------ Tableau final ---------------------------
