@@ -256,7 +256,7 @@ ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.
 fig_nature = px.histogram(
     df_filtered, y="Nature_plainte", color="Statut_traitement", text_auto=True,
     category_orders={"Nature_plainte": ordre_nature}, orientation="h",
-    title="Nombre de griefs par nature", template=plotly_template,
+    title="Nature de griefs par traitement", template=plotly_template,
     color_discrete_map=colors_map_statut, height=400
 )
 # Style du graphique
@@ -265,7 +265,8 @@ fig_nature.update_layout(
     title_font=dict(color=font_color, size=18),
     xaxis_title="Nombre", yaxis_title="Nature de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend_title_text="Statut de traitement"
 )
 st.plotly_chart(fig_nature, use_container_width=True)
 #-------------------------------------------------------------------------------------
