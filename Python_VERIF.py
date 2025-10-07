@@ -190,33 +190,65 @@ else:
 #-------------------------------------------------------------------------------------
 
 # --- Répartition par Type de population et Sexe ---
+# --- Filtre d'affichage du genre ---
+genre_mode = st.radio(
+    "Affichage du genre :",
+    ["Tout genre", "Catégoriser"],
+    index=0,
+    horizontal=True
+)
+
+# --- Préparation des données ---
 df_pop_sexe = df_filtered.groupby(["Type", "Sexe"]).size().reset_index(name="Nombre")
 
-# Créer l'ordre croissant basé sur le total des griefs par type
+# --- Cas 1 : fusionner tous les sexes ---
+if genre_mode == "Tout genre":
+    df_plot = (
+        df_pop_sexe.groupby("Type")["Nombre"]
+        .sum()
+        .reset_index()
+    )
+    color_arg = None  # pas de coloration par sexe
+    barmode = "relative"
+else:
+    df_plot = df_pop_sexe.copy()
+    color_arg = "Sexe"
+    barmode = "group"
+
+# --- Tri croissant selon total des griefs ---
 ordre_tri = (
-    df_pop_sexe.groupby("Type")["Nombre"].sum().sort_values().index.tolist()
+    df_pop_sexe.groupby("Type")["Nombre"]
+    .sum()
+    .sort_values()
+    .index.tolist()
 )
 
-# Créer le graphique
+# --- Création du graphique ---
 fig_pop_sexe = px.bar(
-    df_pop_sexe,
-    x="Type", y="Nombre", color="Sexe", text="Nombre",
-    title="Répartition par type de population", template=plotly_template, height=400,
-    category_orders={"Type": ordre_tri},  # ✅ ici on met la liste ordre_tri
-    barmode="group"  # barres côte à côte
+    df_plot,
+    x="Type",
+    y="Nombre",
+    color=color_arg,
+    text="Nombre",
+    title="Répartition par type de population",
+    template=plotly_template,
+    height=400,
+    category_orders={"Type": ordre_tri},
+    barmode=barmode
 )
 
-# Style du graphique
+# Style du graphque
 fig_pop_sexe.update_traces(marker_line_width=0)
 fig_pop_sexe.update_layout(
     title_font=dict(color=font_color, size=18),
-    xaxis_title="Type de population", yaxis_title="Nombre de griefs",
-    plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    xaxis_title="Type de population",
+    yaxis_title="Nombre de griefs",
+    plot_bgcolor=graph_bg_color,
+    paper_bgcolor=graph_bg_color,
+    font=dict(color=font_color),
 )
 
-# Affichage dans Streamlit
-st.plotly_chart(fig_pop_sexe, use_container_width=True)
+st.plotly_chart(fig_pop_sexe, use_container_width=True)    # affichage dans streamlit
 #-------------------------------------------------------------------------------------
 
 # --- Histogramme par nature ---
