@@ -189,19 +189,21 @@ else:
     c2.plotly_chart(fig_stat, use_container_width=True)
     
 # --- Répartition par type de population ---
-pop_counts = df_filtered["Type"].value_counts().sort_values()
-fig_type = px.bar(
-    x=pop_counts.index, y=pop_counts.values, color = "Sexe", text=pop_counts.values,
-    title="Répartition par type de population", template=plotly_template, height=400
+df_pop_sexe = df_filtered.groupeby(["Type", "Sexe"]).size().reset_index(name = "Nombre")
+ordre_tri = df_pop_sexe.groupby("Type")["Nrombre"].sum().sort_values().index.tolist()
+fig_pop_sexe = px.bar(
+    x="Type", y="Nombre", color = "Sexe", text="Nombre",
+    title="Répartition par type de population", template=plotly_template, height=400,
+    category_order = {"Type", df_pop_sexe},    # tri croissant
 )
 fig_type.update_traces(marker_line_width=0)
 fig_type.update_layout(
     title_font=dict(color=font_color, size=18),
-    xaxis_title="Population", yaxis_title="Nombre de griefs",
+    xaxis_title="Type de population", yaxis_title="Nombre de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
-st.plotly_chart(fig_type, use_container_width=True)
+st.plotly_chart(fig_pop_sexe, use_container_width=True)
 
 # --- Histogramme par nature ---
 ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.tolist()
