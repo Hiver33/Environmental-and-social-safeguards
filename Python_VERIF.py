@@ -189,7 +189,7 @@ else:
     c2.plotly_chart(fig_stat, use_container_width=True)
     
 # --- Répartition par type de population ---
-df_pop_sexe = df_filtered.groupeby(["Type", "Sexe"]).size().reset_index(name = "Nombre")
+df_pop_sexe = df_filtered.groupby(["Type", "Sexe"]).size().reset_index(name = "Nombre")
 ordre_tri = df_pop_sexe.groupby("Type")["Nrombre"].sum().sort_values().index.tolist()
 fig_pop_sexe = px.bar(
     x="Type", y="Nombre", color = "Sexe", text="Nombre",
