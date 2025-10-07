@@ -29,7 +29,7 @@ df = load_data(uploaded_file if uploaded_file else url_excel)
 #====================================================================
 # -------------------- Vérification des colonnes --------------------
 #====================================================================
-cols_req = ["Type_depot","Statut_traitement","Nature_plainte","Categorie","Date_reception","Nb_jour","Communaute","Sexe"]
+cols_req = ["Type_depot","Type","Statut_traitement","Nature_plainte","Categorie","Date_reception","Nb_jour","Communaute","Sexe"]
 if df.empty or not all(col in df.columns for col in cols_req):
     st.stop()
 
@@ -187,7 +187,20 @@ else:
     c1, c2 = st.columns(2)
     c1.plotly_chart(fig_type, use_container_width=True)
     c2.plotly_chart(fig_stat, use_container_width=True)
-
+    
+# --- Répartition par type de population ---
+pop_counts = df_filtered["Type"].value_counts().sort_values()
+fig_type = px.bar(
+    x=pop_counts.index, y=pop_counts.values, color = "Sexe", text=pop_counts.values,
+    title="Répartition par type de population", template=plotly_template, height=400
+)
+fig_type.update_traces(marker_line_width=0)
+fig_type.update_layout(
+    title_font=dict(color=font_color, size=18),
+    xaxis_title="Type", yaxis_title="Population",
+    plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
+    font=dict(color=font_color)
+)
 # --- Histogramme par nature ---
 ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.tolist()
 fig_nature = px.histogram(
