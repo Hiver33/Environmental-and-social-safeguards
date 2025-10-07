@@ -191,13 +191,13 @@ else:
 # --- Répartition par type de population ---
 pop_counts = df_filtered["Type"].value_counts().sort_values()
 fig_type = px.bar(
-    x=pop_counts.index, y=pop_counts.values, color = "Sexe", text=pop_counts.values,
+    x=pop_counts.index, y=pop_counts.values,text=pop_counts.values,
     title="Répartition par type de population", template=plotly_template, height=400
 )
 fig_type.update_traces(marker_line_width=0)
 fig_type.update_layout(
     title_font=dict(color=font_color, size=18),
-    xaxis_title="Type", yaxis_title="Population",
+    xaxis_title="Population", yaxis_title="Nombre de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
