@@ -138,7 +138,7 @@ h1,h2,h3,h4 {{
 st.title("📊 Indicateurs de suivi MGG")
 total = len(df_filtered)
 acheves = len(df_filtered[df_filtered["Statut_traitement"].isin(["Achevé","Grief non recevable"])])
-en_cours = len(df_filtered[df_filtered["Statut_traitement"].isin(["En cours", "Perdue de vue"])])
+en_cours = len(df_filtered[df_filtered["Statut_traitement"].isin(["En cours", "Perdu de vue"])])
 a_traiter = len(df_filtered[df_filtered["Statut_traitement"]=="A traiter"])
 
 cols = st.columns(4)
