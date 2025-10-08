@@ -388,7 +388,8 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
             plot_bgcolor=graph_bg_color,
             paper_bgcolor=graph_bg_color,
             font=dict(color=font_color),
-            showlegend=True
+            showlegend=True,
+            legend_title_text = "Type de dépôt"
         )
 
         st.plotly_chart(fig_comm, use_container_width=True)
