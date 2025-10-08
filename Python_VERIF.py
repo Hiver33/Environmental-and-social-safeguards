@@ -286,10 +286,6 @@ st.plotly_chart(fig_nature, use_container_width=True)
 
 # --- Répartition Communauté / Sexe ---
 st.subheader("🏘️ Répartition par communauté et sexe")
-
-# Disposition : deux colonnes pour affichage côte à côte
-c1, c2 = st.columns(2)
-
 # --- 🔘 Bouton radio pour le mode d'affichage
 choix_type = st.radio(
     "Afficher selon :",
@@ -297,11 +293,13 @@ choix_type = st.radio(
     horizontal=True,
     key="choix_type_comm"
 )
+# Disposition : deux colonnes pour affichage côte à côte
+c1, c2 = st.columns(2)
 
 # Vérification des colonnes requises
 if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
 
-    # MODE 1 : TOUT TYPE
+    # --- cas 1 :  tout type ---
     if choix_type == "Tout type":
         comm_counts = (
             df_filtered.groupby("Communaute")
@@ -321,7 +319,7 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
             color_discrete_sequence=["#00ccff"]
         )
 
-    # MODE 2 : CATÉGORISER PAR TYPE DE DÉPÔT
+    # --- cas 2 :  catégoriser par type de dépôt ---
     else:
         comm_type_counts = (
             df_filtered.groupby(["Communaute", "Type_depot"])
