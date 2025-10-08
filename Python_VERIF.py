@@ -22,7 +22,7 @@ def load_data(path):
         st.error(f"❌ Impossible de charger le fichier Excel : {e}")
         return pd.DataFrame()
 
-url_excel = "https://www.dropbox.com/scl/fi/hwbz7dhwwnbgy861t0p1c/Table_MGG.xlsx?rlkey=on5ajdbcexatrta8tnlx1kdwl&st=mtru6ljs&dl=1"
+url_excel = "https://www.dropbox.com/scl/fo/ybg8t1trc0sg3bxxpnq5r/AEShkZoJ3qn2rr6Ke7dsTRM?rlkey=8hh5yu107jqhpht5p77hnreto&st=z5dj1cog&dl=1"
 uploaded_file = st.sidebar.file_uploader("Choisir un fichier Excel (.xlsx)", type=["xlsx"])
 df = load_data(uploaded_file if uploaded_file else url_excel)
 
