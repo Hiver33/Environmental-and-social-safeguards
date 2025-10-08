@@ -369,7 +369,7 @@ if "Classement" in df_filtered.columns:
     st.subheader("🏁 Griefs classés par nature")
 
     # Filtrer uniquement les griefs classés
-    df_classe = df_filtered[df_filtered["Classement"].astype(str).str.lower() == "OUI"]
+    df_classe = df_filtered[df_filtered["Classement"].astype(str).str.lower() == "oui"]
 
     if not df_classe.empty:
         # Compter les griefs par nature
