@@ -284,6 +284,7 @@ fig_nature.update_layout(
 st.plotly_chart(fig_nature, use_container_width=True)
 #-------------------------------------------------------------------------------------
 
+st.subheader("🏘️ Répartition par communauté et sexe")
 # --- Répartition Communauté / Sexe ---
 # --- 🔘 Bouton radio pour le mode d'affichage ---
 choix_type = st.radio(
