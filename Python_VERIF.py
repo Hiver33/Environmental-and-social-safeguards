@@ -46,7 +46,7 @@ if missing_cols:
     st.stop()
 
 st.success("✅ Toutes les colonnes requises sont présentes !")
-
+else :
 # -------------------- Préparation --------------------
 df["Date_reception"] = pd.to_datetime(df["Date_reception"], errors="coerce", dayfirst=True)
 df = df.dropna(subset=["Date_reception"])
