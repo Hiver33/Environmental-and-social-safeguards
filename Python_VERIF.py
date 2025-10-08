@@ -36,17 +36,17 @@ if df.empty:
     st.error("❌ Le fichier Excel est vide ou n’a pas pu être chargé")
     st.stop()
 
-    st.write("✅ Colonnes disponibles :", df.columns.tolist())
-    st.write("📄 Nombre de lignes :", len(df))
+st.write("✅ Colonnes disponibles :", df.columns.tolist())
+st.write("📄 Nombre de lignes :", len(df))
     
-    # Vérification des colonnes manquantes
-    missing_cols = [col for col in cols_req if col not in df.columns]
-    if missing_cols:
-        st.error(f"❌ Colonnes manquantes dans le fichier : {missing_cols}")
-        st.stop()
+# Vérification des colonnes manquantes
+missing_cols = [col for col in cols_req if col not in df.columns]
+if missing_cols:
+    st.error(f"❌ Colonnes manquantes dans le fichier : {missing_cols}")
+    st.stop()
     
-    st.success("✅ Toutes les colonnes requises sont présentes !")
-else :
+st.success("✅ Toutes les colonnes requises sont présentes !")
+
 # -------------------- Préparation --------------------
 df["Date_reception"] = pd.to_datetime(df["Date_reception"], errors="coerce", dayfirst=True)
 df = df.dropna(subset=["Date_reception"])
