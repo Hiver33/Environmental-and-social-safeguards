@@ -285,31 +285,27 @@ st.plotly_chart(fig_nature, use_container_width=True)
 #-------------------------------------------------------------------------------------
 
 # --- Répartition Communauté / Sexe ---
-st.subheader("🏘️ Répartition par communauté et sexe")
-c1, c2 = st.columns(2)
+st.subheader("🏘️ Répartition des griefs par communauté")
 
-# 🔹 Nettoyage des noms de colonnes pour éviter les espaces cachés
-df_filtered.columns = df_filtered.columns.str.strip().str.replace(" ", "_")
-
-# Bouton radio pour le mode d'affichage
+# --- Bouton radio pour le mode d'affichage
 choix_type = st.radio(
     "Afficher selon :",
-    ("Tout type", "Catégoriser"),
+    ["Tout type", "Catégoriser"],
+    index=0,
     horizontal=True,
     key="choix_type_comm"
 )
 
-# Vérification de la présence des colonnes nécessaires
-if all(col in df_filtered.columns for col in ["Communaute", "Type_depot"]):
+# --- Vérification de la présence des colonnes nécessaires
+if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
 
+    # --- mode 1 - tout type 
     if choix_type == "Tout type":
-        # --- Cas 1 : total par communauté ---
         comm_counts = (
-            df_filtered["Communaute"]
-            .value_counts()
-            .sort_values()
-            .reset_index()
-            .rename(columns={"index": "Communaute", "Communaute": "Nombre_de_griefs"})
+            df_filtered.groupby("Communaute")
+            .size()
+            .reset_index(name="Nombre_de_griefs")
+            .sort_values(by="Nombre_de_griefs", ascending=True)  # 🔹 Tri croissant
         )
 
         fig_comm = px.bar(
@@ -323,12 +319,20 @@ if all(col in df_filtered.columns for col in ["Communaute", "Type_depot"]):
             color_discrete_sequence=["#00ccff"]
         )
 
+    # --- mode 2 : catégoriser
     else:
-        # --- Cas 2 : catégoriser par type de dépôt ---
         comm_type_counts = (
             df_filtered.groupby(["Communaute", "Type_depot"])
             .size()
             .reset_index(name="Nombre_de_griefs")
+        )
+
+        # 🔹 Tri des communautés par total croissant de griefs
+        ordre_tri = (
+            comm_type_counts.groupby("Communaute")["Nombre_de_griefs"]
+            .sum()
+            .sort_values(ascending=True)
+            .index.tolist()
         )
 
         fig_comm = px.bar(
@@ -336,14 +340,15 @@ if all(col in df_filtered.columns for col in ["Communaute", "Type_depot"]):
             x="Communaute",
             y="Nombre_de_griefs",
             color="Type_depot",
-            barmode="group",  # barres côte à côte
             text="Nombre_de_griefs",
             title="Griefs par communauté et type de dépôt",
             template=plotly_template,
-            height=400
+            height=400,
+            category_orders={"Communaute": ordre_tri},
+            barmode="group"  # 🔹 barres côte à côte
         )
 
-    # --- Style du graphique ---
+    # Style du graphique
     fig_comm.update_traces(textposition="outside", marker_line_width=0)
     fig_comm.update_layout(
         title_font=dict(color=font_color, size=18),
@@ -355,28 +360,11 @@ if all(col in df_filtered.columns for col in ["Communaute", "Type_depot"]):
         showlegend=(choix_type == "Catégoriser")
     )
 
-    # Affichage du graphique
+    # --- Affichage du graphique
     c1.plotly_chart(fig_comm, use_container_width=True)
 
 else:
-    st.warning("⚠️ Les colonnes 'Communaute' et 'Type_depot' sont introuvables dans les données.")
-
-# --- Graphique pie pour le sexe ---
-fig_sexe = px.pie(
-    df_filtered,
-    names="Sexe",
-    title="Répartition par sexe",
-    template=plotly_template,
-    height=400
-)
-fig_sexe.update_traces(textinfo="percent+label", textposition="inside", marker_line_width=0)
-fig_sexe.update_layout(
-    title_font=dict(color=font_color, size=18),
-    plot_bgcolor=graph_bg_color,
-    paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
-)
-c2.plotly_chart(fig_sexe, use_container_width=True)
+    st.warning("⚠️ Les colonnes 'Communaute' et 'Type_depot' doivent exister dans le jeu de données.")
 #-------------------------------------------------------------------------------------
 
 # --- Nature par Sexe ---
