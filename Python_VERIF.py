@@ -289,22 +289,75 @@ st.subheader("🏘️ Répartition par communauté et sexe")
 c1, c2 = st.columns(2)
 
 # Graphique bar
-fig_comm = px.bar(
-    x=df_filtered["Communaute"].value_counts().sort_values().index,
-    y=df_filtered["Communaute"].value_counts().sort_values().values,
-    text=df_filtered["Communaute"].value_counts().sort_values().values,
-    title="Nombre de griefs par communauté", template=plotly_template, height=400
+# Bouton radio pour le mode d'affichage
+choix_type = st.radio(
+    "Afficher selon :",
+    ("Tout type", "Catégoriser"),
+    horizontal=True,
+    key="choix_type_comm"
 )
 
-# Style du graphique
-fig_comm.update_traces(marker_line_width=0)
-fig_comm.update_layout(
-    title_font=dict(color=font_color, size=18),
-    xaxis_title="Village/Localité", yaxis_title="Nombre de griefs",
-    plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
-)
-c1.plotly_chart(fig_comm, use_container_width=True)    # affichage dans srtreamlit
+# Vérifier que les colonnes existent
+if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
+
+    # === Mode 1 : Tout type confondu ===
+    if choix_type == "Tout type":
+        comm_counts = (
+            df_filtered["Communaute"]
+            .value_counts()
+            .sort_values()
+            .reset_index()
+            .rename(columns={"index": "Communaute", "Communaute": "Nombre_de_griefs"})
+        )
+
+        fig_comm = px.bar(
+            comm_counts,
+            x="Communaute",
+            y="Nombre_de_griefs",
+            text="Nombre_de_griefs",
+            title="Nombre total de griefs par communauté",
+            template=plotly_template,
+            height=400,
+            color_discrete_sequence=["#00ccff"]
+        )
+
+    # === Mode 2 : Catégoriser par type de dépôt ===
+    else:
+        comm_type_counts = (
+            df_filtered.groupby(["Communaute", "Type_depot"])
+            .size()
+            .reset_index(name="Nombre_de_griefs")
+        )
+
+        fig_comm = px.bar(
+            comm_type_counts,
+            x="Communaute",
+            y="Nombre_de_griefs",
+            color="Type_depot",
+            barmode="group",  # barres côte à côte
+            text="Nombre_de_griefs",
+            title="Griefs par communauté et type de dépôt",
+            template=plotly_template,
+            height=400
+        )
+
+    # Style du graphique
+    fig_comm.update_traces(textposition="outside", marker_line_width=0)
+    fig_comm.update_layout(
+        title_font=dict(color=font_color, size=18),
+        xaxis_title="Village/Localité",
+        yaxis_title="Nombre de griefs",
+        plot_bgcolor=graph_bg_color,
+        paper_bgcolor=graph_bg_color,
+        font=dict(color=font_color),
+        showlegend=(choix_type == "Catégoriser")
+    )
+
+    # Affichage du graphique dans la colonne c1
+    c1.plotly_chart(fig_comm, use_container_width=True)
+
+else:
+    st.warning("⚠️ Les colonnes 'Communaute' et 'Type_depot' doivent exister dans le jeu de données.")
 
 # Graphique pie
 fig_sexe = px.pie(
