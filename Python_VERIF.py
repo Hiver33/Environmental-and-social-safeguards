@@ -264,6 +264,7 @@ st.plotly_chart(fig_pop_sexe, use_container_width=True)    # affichage dans stre
 #-------------------------------------------------------------------------------------
 
 # --- Histogramme par nature ---
+st.subheader("🔵 Statut de traitement")
 ordre_nature = df_filtered["Nature_plainte"].value_counts().sort_values().index.tolist()
 fig_nature = px.histogram(
     df_filtered, y="Nature_plainte", color="Statut_traitement", text_auto=True,
@@ -403,6 +404,7 @@ if "Classement" in df_filtered.columns:
 #-------------------------------------------------------------------------------------
 
 # --- Durée moyenne ---
+st.subheader("⌛ Durée de traitement")
 if "Nb_jour" in df_trim.columns:
     df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
     fig_duree = px.bar(df_duree, x="Nature_plainte", y="Nb_jour", text_auto=".1f",
