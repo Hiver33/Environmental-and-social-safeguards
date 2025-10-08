@@ -181,7 +181,7 @@ fig_type.update_layout(
 
 # --- Avancement général ---
 fig_stat = px.pie(
-    df_filtered, names="Statut_traitement", title="Avancement général du traitement des griefs",
+    df_filtered, names="Statut_traitement", title="Avancement général du traitement",
     color="Statut_traitement", color_discrete_map=colors_map_statut,
     template=plotly_template, height=400
 )
