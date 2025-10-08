@@ -168,7 +168,7 @@ colors_map_statut = {
 # --- Répartition par type de dépôt ---
 type_counts = df_filtered["Type_depot"].value_counts().sort_values()
 fig_type = px.bar(
-    x=type_counts.index, y=type_counts.values, color = "Type_depot", text=type_counts.values,
+    x=type_counts.index, y=type_counts.values, text=type_counts.values,
     title="Répartition par type de dépôt", template=plotly_template, height=400
 )
 fig_type.update_traces(marker_line_width=0)
