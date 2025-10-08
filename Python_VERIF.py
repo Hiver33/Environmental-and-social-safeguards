@@ -13,7 +13,7 @@ from datetime import datetime
 #=================================================================
 # -------------------- Chargement des données --------------------
 #=================================================================
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=30)
 def load_data(path):
     try:
         df = pd.read_excel(path, engine="openpyxl")
