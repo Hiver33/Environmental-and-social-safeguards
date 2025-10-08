@@ -363,6 +363,44 @@ fig_line.update_xaxes(dtick="M1", tickformat="%b", tickangle=-45)
 st.plotly_chart(fig_line, use_container_width=True)    # affichage dans srtreamlit
 #-------------------------------------------------------------------------------------
 
+# --- Classement par nature ---
+if "Classement" in df_filtered.columns:
+    st.subheader("🏁 Griefs classés par nature")
+
+    # Filtrer uniquement les griefs classés
+    df_classe = df_filtered[df_filtered["Classement"].astype(str).str.lower() == "OUI"]
+
+    if not df_classe.empty:
+        # Compter les griefs par nature
+        nature_counts = df_classe["Nature_plainte"].value_counts().sort_values()
+
+        fig_classement = px.bar(
+            x=nature_counts.index,
+            y=nature_counts.values,
+            text=nature_counts.values,
+            title="Répartition des griefs classés par nature",
+            template=plotly_template,
+            height=400,
+            color_discrete_sequence=["#00ccff"]
+        )
+
+        # Style du graphique
+        fig_classement.update_traces(marker_line_width=0)
+        fig_classement.update_layout(
+            title_font=dict(color=font_color, size=18),
+            xaxis_title="Nature de grief",
+            yaxis_title="Nombre de griefs classés",
+            plot_bgcolor=graph_bg_color,
+            paper_bgcolor=graph_bg_color,
+            font=dict(color=font_color)
+        )
+
+        st.plotly_chart(fig_classement, use_container_width=True)
+
+    else:
+        st.info("ℹ️ Aucun grief classé ('Classement = Oui') trouvé dans les données.")
+#-------------------------------------------------------------------------------------
+
 # --- Durée moyenne ---
 if "Nb_jour" in df_trim.columns:
     df_duree = df_trim.groupby("Nature_plainte")["Nb_jour"].mean().round().reset_index().sort_values("Nb_jour")
