@@ -288,7 +288,9 @@ st.plotly_chart(fig_nature, use_container_width=True)
 st.subheader("🏘️ Répartition par communauté et sexe")
 c1, c2 = st.columns(2)
 
-# Graphique bar
+# 🔹 Nettoyage des noms de colonnes pour éviter les espaces cachés
+df_filtered.columns = df_filtered.columns.str.strip().str.replace(" ", "_")
+
 # Bouton radio pour le mode d'affichage
 choix_type = st.radio(
     "Afficher selon :",
@@ -297,11 +299,11 @@ choix_type = st.radio(
     key="choix_type_comm"
 )
 
-# Vérifier que les colonnes existent
-if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
+# Vérification de la présence des colonnes nécessaires
+if all(col in df_filtered.columns for col in ["Communaute", "Type_depot"]):
 
-    # === Mode 1 : Tout type confondu ===
     if choix_type == "Tout type":
+        # --- Cas 1 : total par communauté ---
         comm_counts = (
             df_filtered["Communaute"]
             .value_counts()
@@ -321,8 +323,8 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
             color_discrete_sequence=["#00ccff"]
         )
 
-    # === Mode 2 : Catégoriser par type de dépôt ===
     else:
+        # --- Cas 2 : catégoriser par type de dépôt ---
         comm_type_counts = (
             df_filtered.groupby(["Communaute", "Type_depot"])
             .size()
@@ -341,11 +343,11 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
             height=400
         )
 
-    # Style du graphique
+    # --- Style du graphique ---
     fig_comm.update_traces(textposition="outside", marker_line_width=0)
     fig_comm.update_layout(
         title_font=dict(color=font_color, size=18),
-        xaxis_title="Village/Localité",
+        xaxis_title="Village / Localité",
         yaxis_title="Nombre de griefs",
         plot_bgcolor=graph_bg_color,
         paper_bgcolor=graph_bg_color,
@@ -353,25 +355,28 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
         showlegend=(choix_type == "Catégoriser")
     )
 
-    # Affichage du graphique dans la colonne c1
+    # Affichage du graphique
     c1.plotly_chart(fig_comm, use_container_width=True)
 
 else:
-    st.warning("⚠️ Les colonnes 'Communaute' et 'Type_depot' doivent exister dans le jeu de données.")
+    st.warning("⚠️ Les colonnes 'Communaute' et 'Type_depot' sont introuvables dans les données.")
 
-# Graphique pie
+# --- Graphique pie pour le sexe ---
 fig_sexe = px.pie(
-    df_filtered, names="Sexe", title="Répartition par sexe", template=plotly_template, height=400
+    df_filtered,
+    names="Sexe",
+    title="Répartition par sexe",
+    template=plotly_template,
+    height=400
 )
-
-# Style du graphique
 fig_sexe.update_traces(textinfo="percent+label", textposition="inside", marker_line_width=0)
 fig_sexe.update_layout(
     title_font=dict(color=font_color, size=18),
-    plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
+    plot_bgcolor=graph_bg_color,
+    paper_bgcolor=graph_bg_color,
     font=dict(color=font_color)
 )
-c2.plotly_chart(fig_sexe, use_container_width=True)    # affichage dans srtreamlit
+c2.plotly_chart(fig_sexe, use_container_width=True)
 #-------------------------------------------------------------------------------------
 
 # --- Nature par Sexe ---
