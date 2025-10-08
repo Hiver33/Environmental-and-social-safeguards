@@ -285,22 +285,21 @@ st.plotly_chart(fig_nature, use_container_width=True)
 #-------------------------------------------------------------------------------------
 
 # --- Répartition Communauté / Sexe ---
-st.subheader("🏘️ Répartition par communauté et sexe")
-# --- 🔘 Bouton radio pour le mode d'affichage
+# --- 🔘 Bouton radio pour le mode d'affichage ---
 choix_type = st.radio(
     "Afficher selon :",
     ["Tout type", "Catégoriser"],
     horizontal=True,
     key="choix_type_comm"
 )
-# Disposition : deux colonnes pour affichage côte à côte
-c1, c2 = st.columns(2)
 
-# Vérification des colonnes requises
+# --- Vérification des colonnes requises ---
 if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
 
-    # --- cas 1 :  tout type ---
+    # --- Mode "Tout type" : deux colonnes côte à côte
     if choix_type == "Tout type":
+        c1, c2 = st.columns(2)
+
         comm_counts = (
             df_filtered.groupby("Communaute")
             .size()
@@ -319,7 +318,40 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
             color_discrete_sequence=["#00ccff"]
         )
 
-    # --- cas 2 :  catégoriser par type de dépôt ---
+        fig_comm.update_traces(textposition="outside", cliponaxis=False, marker_line_width=0)
+        fig_comm.update_layout(
+            title_font=dict(color=font_color, size=18),
+            xaxis_title="Village / Localité",
+            yaxis_title="Nombre de griefs",
+            plot_bgcolor=graph_bg_color,
+            paper_bgcolor=graph_bg_color,
+            font=dict(color=font_color),
+            showlegend=False,
+        )
+
+        c1.plotly_chart(fig_comm, use_container_width=True)
+
+        # --- Graphique pie ---
+        if "Sexe" in df_filtered.columns:
+            df_sexe = df_filtered[df_filtered["Sexe"].notna()]
+            if not df_sexe.empty:
+                fig_sexe = px.pie(
+                    df_sexe,
+                    names="Sexe",
+                    title="Répartition par sexe",
+                    template=plotly_template,
+                    height=400
+                )
+                fig_sexe.update_traces(textinfo="percent+label", textposition="inside", marker_line_width=0)
+                fig_sexe.update_layout(
+                    title_font=dict(color=font_color, size=18),
+                    plot_bgcolor=graph_bg_color,
+                    paper_bgcolor=graph_bg_color,
+                    font=dict(color=font_color)
+                )
+                c2.plotly_chart(fig_sexe, use_container_width=True)
+
+    # --- Mode "Catégoriser" : barre pleine largeur, pie en dessous
     else:
         comm_type_counts = (
             df_filtered.groupby(["Communaute", "Type_depot"])
@@ -342,53 +374,46 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
             text="Nombre_de_griefs",
             title="Griefs par communauté et type de dépôt",
             template=plotly_template,
-            height=400,
+            height=600,
             category_orders={"Communaute": ordre_tri},
             barmode="group"
         )
 
-    # Style graphique
-    fig_comm.update_traces(textposition="outside", marker_line_width=0)
-    fig_comm.update_layout(
-        title_font=dict(color=font_color, size=18),
-        xaxis_title="Village/Localité",
-        yaxis_title="Nombre de griefs",
-        plot_bgcolor=graph_bg_color,
-        paper_bgcolor=graph_bg_color,
-        font=dict(color=font_color),
-        showlegend=(choix_type == "Catégoriser")
-    )
-
-    # Affichage
-    c1.plotly_chart(fig_comm, use_container_width=True)
-
-else:
-    c1.warning("⚠️ Les colonnes 'Communaute' et 'Type_depot' doivent exister dans le jeu de données.")
-
-
-# --- Repartition par sexe ---
-if "Sexe" in df_filtered.columns:
-    df_sexe = df_filtered[df_filtered["Sexe"].notna()]  # ⚙️ ignore les valeurs vides
-    if not df_sexe.empty:
-        fig_sexe = px.pie(
-            df_sexe,
-            names="Sexe",
-            title="Répartition par sexe",
-            template=plotly_template,
-            height=400
-        )
-        fig_sexe.update_traces(textinfo="percent+label", textposition="inside", marker_line_width=0)
-        fig_sexe.update_layout(
+        fig_comm.update_traces(textposition="outside", cliponaxis=False, marker_line_width=0)
+        fig_comm.update_layout(
             title_font=dict(color=font_color, size=18),
+            xaxis_title="Village / Localité",
+            yaxis_title="Nombre de griefs",
             plot_bgcolor=graph_bg_color,
             paper_bgcolor=graph_bg_color,
-            font=dict(color=font_color)
+            font=dict(color=font_color),
+            showlegend=True
         )
-        c2.plotly_chart(fig_sexe, use_container_width=True)
-    else:
-        c2.info("Aucune donnée de sexe disponible.")
+
+        st.plotly_chart(fig_comm, use_container_width=True)
+
+        # --- Graphique pie en dessous --
+        if "Sexe" in df_filtered.columns:
+            df_sexe = df_filtered[df_filtered["Sexe"].notna()]
+            if not df_sexe.empty:
+                fig_sexe = px.pie(
+                    df_sexe,
+                    names="Sexe",
+                    title="Répartition par sexe",
+                    template=plotly_template,
+                    height=350
+                )
+                fig_sexe.update_traces(textinfo="percent+label", textposition="inside", marker_line_width=0)
+                fig_sexe.update_layout(
+                    title_font=dict(color=font_color, size=18),
+                    plot_bgcolor=graph_bg_color,
+                    paper_bgcolor=graph_bg_color,
+                    font=dict(color=font_color)
+                )
+                st.plotly_chart(fig_sexe, use_container_width=True)
+
 else:
-    c2.warning("⚠️ La colonne 'Sexe' est manquante.")
+    st.warning("⚠️ Les colonnes 'Communaute' et 'Type_depot' doivent exister dans le jeu de données.")
 #-------------------------------------------------------------------------------------
 
 # --- Nature par Sexe ---
