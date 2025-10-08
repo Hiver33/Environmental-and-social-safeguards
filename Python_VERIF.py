@@ -31,7 +31,8 @@ df = load_data(uploaded_file if uploaded_file else url_excel)
 #====================================================================
 cols_req = [
     "Type_depot","Type","Statut_traitement","Nature_plainte",
-    "Categorie","Date_reception","Nb_jour","Communaute","Sexe"
+    "Categorie","Date_reception","Nb_jour","Communaute","Sexe", 
+    "Classement"
 ]
 
 if df.empty:
