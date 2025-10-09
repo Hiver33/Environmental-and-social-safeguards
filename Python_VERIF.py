@@ -81,12 +81,6 @@ st.sidebar.header("🖌️ Apparence")
 plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Clair", "Sombre"])
 
-# --- bouton forcer l'actualisation du code ---
-st.sidebar.markdown("---")
-if st.sidebar.button("🔄️ Forcer la mise à jour"):
-    st.cache_data.clear()
-    st.experimental_rerun()
-
 # Définition des couleurs selon le thème
 if theme_choice == "Clair":
     page_bg = "#f5f5f5"
