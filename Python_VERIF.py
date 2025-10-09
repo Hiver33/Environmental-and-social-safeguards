@@ -402,7 +402,7 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
                 fig_sexe = px.pie(
                     df_sexe,
                     names="Sexe",
-                    title="Répartition par genre,
+                    title="Répartition par genre",
                     template=plotly_template,
                     height=350
                 )
