@@ -246,8 +246,7 @@ fig_pop_sexe = px.bar(
     template=plotly_template,
     height=400,
     category_orders={"Type": ordre_tri},
-    barmode=barmode,
-    legend_title_text = "Genre"
+    barmode=barmode
 )
 
 # Style du graphque
@@ -259,6 +258,7 @@ fig_pop_sexe.update_layout(
     plot_bgcolor=graph_bg_color,
     paper_bgcolor=graph_bg_color,
     font=dict(color=font_color),
+    legend_title_text = "Genre"
 )
 
 st.plotly_chart(fig_pop_sexe, use_container_width=True)    # affichage dans streamlit
