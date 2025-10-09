@@ -80,10 +80,10 @@ st.sidebar.markdown("---")
 st.sidebar.header("🖌️ Apparence")
 plein_ecran = st.sidebar.toggle("🖥️ Plein écran")
 theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Clair", "Sombre"])
-st.sidebar.markdown("---")
 
 # --- bouton forcer l'actualisation du code ---
-if st.button("🔄️ Forcer la mise à jour"):
+st.sidebar.markdown("---")
+if st.sidebar.button("🔄️ Forcer la mise à jour"):
     st.cach_data.clear()
     st.experimental_rerun()
 
