@@ -201,7 +201,7 @@ else:
     c2.plotly_chart(fig_stat, use_container_width=True)
 #-------------------------------------------------------------------------------------
 
-# --- Répartition par Type de population et Sexe ---
+# --- Répartition par Type de population et Genre ---
 # --- Filtre d'affichage du genre ---
 genre_mode = st.radio(
     "Affichage du genre (H/F):",
@@ -213,14 +213,14 @@ genre_mode = st.radio(
 # --- Préparation des données ---
 df_pop_sexe = df_filtered.groupby(["Type", "Sexe"]).size().reset_index(name="Nombre")
 
-# --- Cas 1 : fusionner tous les sexes ---
+# --- Cas 1 : fusionner tous les genres ---
 if genre_mode == "Tout genre":
     df_plot = (
         df_pop_sexe.groupby("Type")["Nombre"]
         .sum()
         .reset_index()
     )
-    color_arg = None  # pas de coloration par sexe
+    color_arg = None  # pas de coloration par genre
     barmode = "relative"
 else:
     df_plot = df_pop_sexe.copy()
@@ -246,7 +246,8 @@ fig_pop_sexe = px.bar(
     template=plotly_template,
     height=400,
     category_orders={"Type": ordre_tri},
-    barmode=barmode
+    barmode=barmode,
+    legent_title_text = "Genre"
 )
 
 # Style du graphque
@@ -285,7 +286,7 @@ st.plotly_chart(fig_nature, use_container_width=True)
 #-------------------------------------------------------------------------------------
 
 st.subheader("🏘️ Répartition par communauté et sexe")
-# --- Répartition Communauté / Sexe ---
+# --- Répartition Communauté / Genre ---
 # --- 🔘 Bouton radio pour le mode d'affichage ---
 choix_type = st.radio(
     "Afficher selon :",
@@ -401,7 +402,7 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
                 fig_sexe = px.pie(
                     df_sexe,
                     names="Sexe",
-                    title="Répartition par sexe",
+                    title="Répartition par genre,
                     template=plotly_template,
                     height=350
                 )
@@ -418,8 +419,8 @@ else:
     st.warning("⚠️ Les colonnes 'Communaute' et 'Type_depot' doivent exister dans le jeu de données.")
 #-------------------------------------------------------------------------------------
 
-# --- Nature par Sexe ---
-st.subheader("👥 Nature des griefs par sexe")
+# --- Nature par Genre ---
+st.subheader("👥 Nature des griefs par genre")
 df_cat_sexe = df_filtered.groupby(["Nature_plainte","Sexe"]).size().reset_index(name="Nombre")
 ordre_nature_tri = df_cat_sexe.groupby("Nature_plainte")["Nombre"].sum().sort_values().index.tolist()
 fig_cat_sexe = px.bar(
@@ -435,7 +436,8 @@ fig_cat_sexe.update_layout(
     title_font=dict(color=font_color, size=18),
     xaxis_title="Nombre", yaxis_title="Nature de griefs",
     plot_bgcolor=graph_bg_color, paper_bgcolor=graph_bg_color,
-    font=dict(color=font_color)
+    font=dict(color=font_color),
+    legend_title_text = "Genre"
 )
 st.plotly_chart(fig_cat_sexe, use_container_width=True)    # affichage dans srtreamlit
 #-------------------------------------------------------------------------------------
