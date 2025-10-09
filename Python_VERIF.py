@@ -285,7 +285,7 @@ fig_nature.update_layout(
 st.plotly_chart(fig_nature, use_container_width=True)
 #-------------------------------------------------------------------------------------
 
-st.subheader("🏘️ Répartition par communauté et sexe")
+st.subheader("🏘️ Répartition par communauté et genre")
 # --- Répartition Communauté / Genre ---
 # --- 🔘 Bouton radio pour le mode d'affichage ---
 choix_type = st.radio(
@@ -340,7 +340,7 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
                 fig_sexe = px.pie(
                     df_sexe,
                     names="Sexe",
-                    title="Répartition par sexe",
+                    title="Répartition par genre",
                     template=plotly_template,
                     height=400
                 )
