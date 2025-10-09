@@ -84,7 +84,7 @@ theme_choice = st.sidebar.radio("🎨 Choisir le thème :", ["Clair", "Sombre"])
 # --- bouton forcer l'actualisation du code ---
 st.sidebar.markdown("---")
 if st.sidebar.button("🔄️ Forcer la mise à jour"):
-    st.cach_data.clear()
+    st.cache_data.clear()
     st.experimental_rerun()
 
 # Définition des couleurs selon le thème
