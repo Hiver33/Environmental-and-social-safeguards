@@ -247,7 +247,7 @@ fig_pop_sexe = px.bar(
     height=400,
     category_orders={"Type": ordre_tri},
     barmode=barmode,
-    legent_title_text = "Genre"
+    legend_title_text = "Genre"
 )
 
 # Style du graphque
