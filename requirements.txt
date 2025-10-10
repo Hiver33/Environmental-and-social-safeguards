@@ -3,3 +3,9 @@ pandas
 plotly
 matplotlib
 openpyxl
+geopandas
+shapely
+pyproj
+fiona
+folium
+streamlit-folium
