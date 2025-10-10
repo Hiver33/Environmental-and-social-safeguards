@@ -12,6 +12,7 @@ fiona
 pyproj
 rtree
 pyogrio
+branca
 
 # Manipulation de données
 pandas
