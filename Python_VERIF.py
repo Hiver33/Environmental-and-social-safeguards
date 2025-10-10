@@ -5,14 +5,14 @@
 #==================================================================
 # ------------------ Chargement des bibliothèques -----------------
 #==================================================================
-import streamlit as st
+import os
+import requests
 import pandas as pd
-import plotly.express as px
 import geopandas as gpd
 import folium
+import streamlit as st
+import plotly.express as px
 import matplotlib.pyplot as plt
-import requests
-import os
 from shapely.geometry import Point
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
@@ -164,69 +164,84 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 #====================================================================
 # --------------------- Carte de localisation -----------------------
 #====================================================================
+# --- Liens Dropbox ---
 point_url = "https://www.dropbox.com/scl/fi/mwmz73mvwb6sp8fv9ddjj/Boite_aux_lettres.shp?rlkey=c772yrovwd4l6gm4xahj7ulh6&st=bptqslz1&dl=1"
 polygon_url = "https://www.dropbox.com/scl/fi/2zb2mjeomysc7l4rq1iuc/lim_lefini_09072020.shp?rlkey=72cqyuokctr0ry202j8rqcto6&st=w06iytlp&dl=1"
 
-# --- Créer un dossier temporaire pour stocker les fichiers ---
+# --- Créer un dossier temporaire ---
 os.makedirs("temp_shp", exist_ok=True)
 
-# --- Création de fichiers temporaire ---
+# --- Création des fichiers temporaires ---
 point_path = "temp_shp/Boite_aux_lettres.shp"
 polygon_path = "temp_shp/lim_lefini_09072020.shp"
 
+# --- Téléchargement depuis Dropbox ---
 for url, path in [(point_url, point_path), (polygon_url, polygon_path)]:
     r = requests.get(url)
     if r.status_code == 200:
         with open(path, "wb") as f:
             f.write(r.content)
-        print(f"Téléchargé : {path}")
+        print(f"✅ Téléchargé : {path}")
     else:
-        print(f"Erreur téléchargement : {url}")
+        print(f"⚠️ Erreur téléchargement : {url}")
 
-#--- Lire les shapefiles localement ---
+# --- Lecture des shapefiles ---
 point_gdf = gpd.read_file(point_path)
 polygon_gdf = gpd.read_file(polygon_path)
 
-# --- reprojection automatique vers WGS84 pour folium ---
-point_gdf = point_gdf.to_crs(epsg = 4326)
-polygon_gdf = polygon_gdf.to_crs(epsg = 4326)
+# --- Reprojection automatique vers WGS84 (obligatoire pour Folium) ---
+point_gdf = point_gdf.to_crs(epsg=4326)
+polygon_gdf = polygon_gdf.to_crs(epsg=4326)
 
-# --- jointure avec la dataframe df ---
-point_merged = point_gdf.merge(df_filtered, 
-                               left_on = "name",
-                               right_on = "Communaute",
-                               how = "left"
-                              )
-# --- création de carte ---
-map = folium.Map(location = [-2.6, 157],
-                zoom_start = 6,
-                tiles = "CartoDB_dark_maker"
-                )
-# --- ajout des couches ---
-# domaine de projet
+# --- Jointure avec ta dataframe principale (ex: df_filtered) ---
+# ⚠️ Assure-toi que "df_filtered" et les colonnes existent
+point_merged = point_gdf.merge(
+    df_filtered,
+    left_on="name",          # champ dans shapefile
+    right_on="Communaute",   # champ dans dataframe
+    how="left"
+)
+
+# --- Création de la carte ---
+m = folium.Map(
+    location=[-2.6, 17],        # longitude corrigée (pas 157 sinon tu tombes dans le Pacifique 😅)
+    zoom_start=6,
+    tiles="CartoDB dark_matter"  # bon nom du fond sombre
+)
+
+# --- Ajout du domaine de projet (polygone) ---
 folium.GeoJson(
     polygon_gdf,
-    name = "Domaine",
-    style_function = lambda x: {"fillcolor " : "#ff7800", "color" : "#ffffff", "weight" : 2, "fillOpacity" : 0.3},
-    tooltip = "Zone de projet").add_to(map)
-# boîtes aux lettres
-marker_cluster = MarkerCluster(name = "📍Communauté").add-to(map)
-for _, row in point_merged.interrows():
-    pop_html = f"""
-    <b>{row['Communaute']}</b><br>
+    name="Domaine",
+    style_function=lambda x: {
+        "fillColor": "#ff7800",
+        "color": "#ffffff",
+        "weight": 2,
+        "fillOpacity": 0.3
+    },
+    tooltip="Zone de projet"
+).add_to(m)
+
+# --- Ajout des points (boîtes à griefs) ---
+marker_cluster = MarkerCluster(name="📍Communautés").add_to(m)
+
+for _, row in point_merged.iterrows():
+    popup_html = f"""
+    <b>{row.get('Communaute', 'Inconnue')}</b><br>
     Statut : {row.get('Statut_traitement', 'N/A')}<br>
     """
     folium.Marker(
-        location = [row.geometry.y, row.geometry.x],
-        popup = folium.Popup(popup_html, max_width = 250),
-        icon = folium.Icon(color = "lithgreen", icon = "info-sign")
+        location=[row.geometry.y, row.geometry.x],
+        popup=folium.Popup(popup_html, max_width=250),
+        icon=folium.Icon(color="lightgreen", icon="info-sign")
     ).add_to(marker_cluster)
 
-folium.LayerControle(collapsed = False).add_to(map)
+# --- Contrôle des couches ---
+folium.LayerControl(collapsed=False).add_to(m)
 
-# --- afficher la carte ---
-st.subheader("📍Carte de localisation des boîtes à grief")
-map_data = st.folium(map, width = 900, height = 600)
+# --- Affichage dans Streamlit ---
+st.subheader("📍 Carte de localisation des boîtes à grief")
+st_folium(m, width=900, height=600)
                   
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
