@@ -8,6 +8,12 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import geopandas as gpd
+import folium
+import matplotlib.pyplot as plt
+from shapely.geometry import Point
+from folium.plugins import MarkerCluster
+from streamlit_folium import st_folium
 from datetime import datetime
 
 #=================================================================
@@ -153,6 +159,58 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
         </div>
     """, unsafe_allow_html=True)
 
+#====================================================================
+# --------------------- Carte de localisation -----------------------
+#====================================================================
+# --- chagrement des liens ---
+point_url = "https://www.dropbox.com/scl/fi/mwmz73mvwb6sp8fv9ddjj/Boite_aux_lettres.shp?rlkey=c772yrovwd4l6gm4xahj7ulh6&st=bptqslz1&dl=1"
+polygon_url = "https://www.dropbox.com/scl/fi/2zb2mjeomysc7l4rq1iuc/lim_lefini_09072020.shp?rlkey=72cqyuokctr0ry202j8rqcto6&st=w06iytlp&dl=1"
+
+# --- lire les fichiers ---
+point_gdf = gpd.read_file(point_url)
+polygon_gdf = gpd.read_file(polugon_url)
+
+# --- reprojection automatique vers WGS84 pour folium ---
+point_gdf = point_gdf.to_crs(epsg = 4326)
+polygon_gdf = polygon_gdf.to_crs(epsg = 4326)
+
+# --- jointure avec la dataframe df ---
+point_merged = point_gdf.merge(df_filtered, 
+                               left_on = "name",
+                               right_on = "Communaute",
+                               how = "left"
+                              )
+# --- création de carte ---
+map = folium.Map(location = [-2.6, 157],
+                zoom_start = 6,
+                tiles = "CartoDB_dark_maker"
+                )
+# --- ajout des couches ---
+# domaine de projet
+folium.GeoJson(
+    polygon_gdf,
+    name = "Domaine",
+    style_function = lambda x: {"fillcolor " : "#ff7800", "color" : "#ffffff", "weight" : 2, "fillOpacity" : 0.3},
+    tooltip = "Zone de projet").add_to(map)
+# boîtes aux lettres
+marker_cluster = MarkerCluster(name = "📍Communauté").add-to(map)
+for _, row in point_merged.interrows():
+    pop_html = f"""
+    <b>{row['Communaute']}</b><br>
+    Statut : {row.get('Statut_traitement', 'N/A')}<br>
+    """
+    folium.Marker(
+        location = [row.geometry.y, row.geometry.x],
+        popup = folium.Popup(popup_html, max_width = 250),
+        icon = folium.Icon(color = "lithgreen", icon = "info-sign")
+    ).add_to(marker_cluster)
+
+folium.LayerControle(collapsed = False).add_to(map)
+
+# --- afficher la carte ---
+st.subheader("📍Carte de localisation des boîtes à grief")
+map_data = st.folium(map, width = 900, height = 600)
+                  
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
 #====================================================================
