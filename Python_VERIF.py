@@ -166,8 +166,8 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 #====================================================================
 # --- Liens Dropbox ---
 # --- Exemple avec GeoPackage (plus robuste que SHP) ---
-point_url = "https://www.dropbox.com/scl/fi/xxxx/Boite_aux_lettres.gpkg?dl=1"
-polygon_url = "https://www.dropbox.com/scl/fi/yyyy/lim_lefini_09072020.gpkg?dl=1"
+point_url = "https://www.dropbox.com/scl/fi/rgf74oa5eldfci8f5lems/Boite_aux_lettres.gpkg?rlkey=b6r4flk6158dy4mze9m8f81rp&st=dcgum783&dl=1"
+polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_09072020.gpkg?rlkey=15vxwezrwbo11rtfuxh2z91un&st=c05wbp5m&dl=1"
 
 # --- Dossier temporaire ---
 os.makedirs("temp_gpkg", exist_ok=True)
