@@ -219,7 +219,7 @@ folium.GeoJson(
 ).add_to(m)
 
 # --- Ajout des points (boîtes à griefs) ---
-marker_cluster = MarkerCluster(name="📍Communautés").add_to(m)
+marker_cluster = MarkerCluster(name="📍Communautés").add_to(map)
 
 for _, row in point_merged.iterrows():
     popup_html = f"""
@@ -233,7 +233,7 @@ for _, row in point_merged.iterrows():
     ).add_to(marker_cluster)
 
 # --- Contrôle des couches ---
-folium.LayerControl(collapsed=False).add_to(m)
+folium.LayerControl(collapsed=False).add_to(map)
 
 # --- Affichage dans Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
