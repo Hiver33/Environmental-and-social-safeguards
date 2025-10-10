@@ -165,7 +165,6 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 # --------------------- Carte de localisation -----------------------
 #====================================================================
 # --- Liens Dropbox ---
-# --- Liens Dropbox (GeoPackage recommandés) ---
 point_url = "https://www.dropbox.com/scl/fi/rgf74oa5eldfci8f5lems/Boite_aux_lettres.gpkg?rlkey=b6r4flk6158dy4mze9m8f81rp&st=dcgum783&dl=1"
 polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_09072020.gpkg?rlkey=15vxwezrwbo11rtfuxh2z91un&st=c05wbp5m&dl=1"
 
@@ -173,17 +172,19 @@ polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_0
 os.makedirs("temp_gpkg", exist_ok=True)
 
 # --- Téléchargement depuis Dropbox ---
-for url, path in [(point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
-                  (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")]:
+for url, path in [
+    (point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
+    (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")
+]:
     r = requests.get(url)
     if r.status_code == 200:
         with open(path, "wb") as f:
             f.write(r.content)
         print(f"Téléchargé : {path}")
     else:
-        print(f"Erreur téléchargement : {url}")
+        print(f"⚠️ Erreur téléchargement : {url}")
 
-# --- Lecture directe des GeoPackages ---
+# --- Lecture directe ---
 point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg")
 polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 
@@ -191,13 +192,23 @@ polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
 
-# --- Jointure avec ta dataframe principale ---
+# --- Jointure avec ta dataframe Excel ---
 point_merged = point_gdf.merge(
     df_filtered,
-    left_on="name",          # champ dans shapefile
-    right_on="Communaute",   # champ dans dataframe
+    left_on="name",
+    right_on="Communaute",
     how="left"
 )
+
+# --- Séparation : avec ou sans statut ---
+points_valides = point_merged[
+    point_merged["Statut_traitement"].notna() &
+    (point_merged["Statut_traitement"].astype(str).str.strip() != "")
+]
+points_vides = point_merged[
+    point_merged["Statut_traitement"].isna() |
+    (point_merged["Statut_traitement"].astype(str).str.strip() == "")
+]
 
 # --- Création de la carte ---
 m = folium.Map(
@@ -206,7 +217,7 @@ m = folium.Map(
     tiles="CartoDB dark_matter"
 )
 
-# --- Ajout du polygone du domaine ---
+# --- Ajout du domaine de projet ---
 folium.GeoJson(
     polygon_gdf,
     name="Domaine",
@@ -219,10 +230,10 @@ folium.GeoJson(
     tooltip="Zone de projet"
 ).add_to(m)
 
-# --- Définir les couleurs selon le statut ---
+# --- Fonction couleur selon le statut ---
 def couleur_statut(statut):
     if isinstance(statut, str):
-        s = statut.strip().lower()
+        s = statut.lower()
         if "traité" in s or "clos" in s:
             return "green"
         elif "cours" in s or "en cours" in s:
@@ -231,12 +242,13 @@ def couleur_statut(statut):
             return "red"
     return "gray"
 
-# --- Cluster pour les points ---
-marker_cluster = MarkerCluster(name="📍Communautés").add_to(m)
+# --- Cluster pour les statuts valides ---
+cluster_valides = MarkerCluster(
+    name=f"📍Communautés avec statut ({len(points_valides)})"
+).add_to(m)
 
-# --- Ajout des points colorés dans le cluster ---
-for _, row in point_merged.iterrows():
-    statut = row.get("Statut_traitement", "N/A")
+for _, row in points_valides.iterrows():
+    statut = row["Statut_traitement"]
     couleur = couleur_statut(statut)
     popup_html = f"""
     <b>{row.get('Communaute', 'Inconnue')}</b><br>
@@ -250,7 +262,27 @@ for _, row in point_merged.iterrows():
         fill_color=couleur,
         fill_opacity=0.9,
         popup=folium.Popup(popup_html, max_width=250)
-    ).add_to(marker_cluster)
+    ).add_to(cluster_valides)
+
+# --- Cluster séparé pour les points sans statut (gris) ---
+cluster_vides = MarkerCluster(
+    name=f"⚪ Communautés sans statut ({len(points_vides)})"
+).add_to(m)
+
+for _, row in points_vides.iterrows():
+    popup_html = f"""
+    <b>{row.get('Communaute', 'Inconnue')}</b><br>
+    Statut : N/A<br>
+    """
+    folium.CircleMarker(
+        location=[row.geometry.y, row.geometry.x],
+        radius=6,
+        color="white",
+        fill=True,
+        fill_color="gray",
+        fill_opacity=0.6,
+        popup=folium.Popup(popup_html, max_width=250)
+    ).add_to(cluster_vides)
 
 # --- Contrôle des couches ---
 folium.LayerControl(collapsed=False).add_to(m)
