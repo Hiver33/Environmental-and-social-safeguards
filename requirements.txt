@@ -1,11 +1,30 @@
+streamlit-folium
+# Interface et dashboard
 streamlit
-pandas
+streamlit-folium
 plotly
-matplotlib
-openpyxl
+
+# Cartographie et SIG
+folium
 geopandas
 shapely
-pyproj
 fiona
-folium
-streamlit-folium
+pyproj
+rtree
+pyogrio
+
+# Manipulation de données
+pandas
+numpy
+requests
+
+# Visualisation complémentaire
+matplotlib
+plotly
+
+# Gestion des fichiers compressés ou distants
+zipfile36
+urllib3
+
+# Autres utilitaires
+openpyxl
