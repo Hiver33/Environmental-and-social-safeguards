@@ -183,11 +183,11 @@ for url, path in [
     else:
         st.error(f"Erreur téléchargement : {url}")
 
-# --- Lecture des GeoPackages ---
+# --- Lecture GeoPackages ---
 point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg")
 polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 
-# --- Reprojection vers WGS84 ---
+# --- Reprojection vers WGS84 pour Folium ---
 point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
 
@@ -197,7 +197,7 @@ df_filtered["Communaute"] = df_filtered["Communaute"].str.strip().str.lower()
 df_filtered["Statut_traitement"] = df_filtered["Statut_traitement"].replace(["nan","NaN","None",""], pd.NA)
 df_filtered = df_filtered.drop_duplicates(subset=["Communaute"])
 
-# --- Jointure ---
+# --- Jointure GeoDataFrame avec dataframe ---
 point_merged = point_gdf.merge(
     df_filtered,
     left_on="name",
@@ -205,22 +205,7 @@ point_merged = point_gdf.merge(
     how="left"
 )
 
-# --- Séparer points valides / points vides ---
-points_valides = point_merged[point_merged["Statut_traitement"].notna()]
-points_vides = point_merged[point_merged["Statut_traitement"].isna()]
-
-# --- Création de la carte ---
-m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
-
-# --- Polygone du domaine ---
-folium.GeoJson(
-    polygon_gdf,
-    name="Domaine",
-    style_function=lambda x: {"fillColor": "#ff7800","color": "#ffffff","weight": 2,"fillOpacity": 0.3},
-    tooltip="Zone de projet"
-).add_to(m)
-
-# --- Fonction couleur ---
+# --- Fonction couleur par statut ---
 def couleur_statut(statut):
     if isinstance(statut, str):
         s = statut.lower()
@@ -229,11 +214,24 @@ def couleur_statut(statut):
         elif "non" in s or "à traiter" in s: return "red"
     return "gray"
 
-# --- MarkerCluster pour tous les points ---
-# ⚠️ le compteur sera basé sur les points valides uniquement
-marker_cluster = MarkerCluster(
-    name=f"📍 Communautés (points valides : {len(points_valides)})"
+# --- Création de la carte ---
+m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
+
+# --- Polygone Domaine ---
+folium.GeoJson(
+    polygon_gdf,
+    name="Domaine",
+    style_function=lambda x: {
+        "fillColor": "#ff7800",
+        "color": "#ffffff",
+        "weight": 2,
+        "fillOpacity": 0.3
+    },
+    tooltip="Zone de projet"
 ).add_to(m)
+
+# --- Cluster des points ---
+marker_cluster = MarkerCluster(name="📍 Communautés").add_to(m)
 
 # --- Ajouter tous les points ---
 for _, row in point_merged.iterrows():
@@ -257,8 +255,25 @@ for _, row in point_merged.iterrows():
         popup=folium.Popup(popup_html, max_width=250)
     ).add_to(marker_cluster)
 
-# --- Contrôle des couches ---
+# --- Contrôle des couches (LayerControl compact) ---
 folium.LayerControl(collapsed=False).add_to(m)
+
+# --- CSS pour réduire taille LayerControl ---
+layercontrol_css = """
+{% macro html(this, kwargs) %}
+<style>
+.leaflet-control-layers {
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+    max-height: 150px !important;
+    overflow-y: auto !important;
+}
+</style>
+{% endmacro %}
+"""
+macro = MacroElement()
+macro._template = Template(layercontrol_css)
+m.get_root().add_child(macro)
 
 # --- Affichage Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
