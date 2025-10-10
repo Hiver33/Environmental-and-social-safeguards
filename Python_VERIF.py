@@ -171,7 +171,7 @@ polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_0
 # --- Dossier temporaire ---
 os.makedirs("temp_gpkg", exist_ok=True)
 
-# --- Téléchargement depuis Dropbox ---
+# --- Téléchargement ---
 for url, path in [
     (point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
     (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")
@@ -180,11 +180,10 @@ for url, path in [
     if r.status_code == 200:
         with open(path, "wb") as f:
             f.write(r.content)
-        print(f"Téléchargé : {path}")
     else:
-        print(f"⚠️ Erreur téléchargement : {url}")
+        st.error(f"Erreur téléchargement : {url}")
 
-# --- Lecture directe ---
+# --- Lecture des GeoPackages ---
 point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg")
 polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 
@@ -192,7 +191,13 @@ polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
 
-# --- Jointure avec ta dataframe Excel ---
+# --- Nettoyage pour jointure fiable ---
+point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
+df_filtered["Communaute"] = df_filtered["Communaute"].str.strip().str.lower()
+df_filtered["Statut_traitement"] = df_filtered["Statut_traitement"].replace(["nan","NaN","None",""], pd.NA)
+df_filtered = df_filtered.drop_duplicates(subset=["Communaute"])
+
+# --- Jointure ---
 point_merged = point_gdf.merge(
     df_filtered,
     left_on="name",
@@ -200,60 +205,41 @@ point_merged = point_gdf.merge(
     how="left"
 )
 
-# --- Séparation : avec ou sans statut ---
-points_valides = point_merged[
-    point_merged["Statut_traitement"].notna() &
-    (point_merged["Statut_traitement"].astype(str).str.strip() != "")
-]
-points_vides = point_merged[
-    point_merged["Statut_traitement"].isna() |
-    (point_merged["Statut_traitement"].astype(str).str.strip() == "")
-]
+# --- Séparer points valides / points vides ---
+points_valides = point_merged[point_merged["Statut_traitement"].notna()]
+points_vides = point_merged[point_merged["Statut_traitement"].isna()]
 
 # --- Création de la carte ---
-m = folium.Map(
-    location=[-0.8, 17],
-    zoom_start=6,
-    tiles="CartoDB dark_matter"
-)
+m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
 
-# --- Ajout du domaine de projet ---
+# --- Polygone du domaine ---
 folium.GeoJson(
     polygon_gdf,
     name="Domaine",
-    style_function=lambda x: {
-        "fillColor": "#ff7800",
-        "color": "#ffffff",
-        "weight": 2,
-        "fillOpacity": 0.3
-    },
+    style_function=lambda x: {"fillColor": "#ff7800","color": "#ffffff","weight": 2,"fillOpacity": 0.3},
     tooltip="Zone de projet"
 ).add_to(m)
 
-# --- Fonction couleur selon le statut ---
+# --- Fonction couleur ---
 def couleur_statut(statut):
     if isinstance(statut, str):
         s = statut.lower()
-        if "traité" in s or "clos" in s:
-            return "green"
-        elif "cours" in s or "en cours" in s:
-            return "orange"
-        elif "non" in s or "à traiter" in s:
-            return "red"
+        if "traité" in s or "clos" in s: return "green"
+        elif "cours" in s or "en cours" in s: return "orange"
+        elif "non" in s or "à traiter" in s: return "red"
     return "gray"
 
-# --- Cluster pour les statuts valides ---
-cluster_valides = MarkerCluster(
-    name=f"📍Communautés avec statut ({len(points_valides)})"
+# --- MarkerCluster pour tous les points ---
+# ⚠️ le compteur sera basé sur les points valides uniquement
+marker_cluster = MarkerCluster(
+    name=f"📍 Communautés (points valides : {len(points_valides)})"
 ).add_to(m)
 
-for _, row in points_valides.iterrows():
-    statut = row["Statut_traitement"]
+# --- Ajouter tous les points ---
+for _, row in point_merged.iterrows():
+    statut = row.get("Statut_traitement", "N/A")
     couleur = couleur_statut(statut)
-    popup_html = f"""
-    <b>{row.get('Communaute', 'Inconnue')}</b><br>
-    Statut : {statut}<br>
-    """
+    popup_html = f"<b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br><b>Statut :</b> {statut}"
     folium.CircleMarker(
         location=[row.geometry.y, row.geometry.x],
         radius=6,
@@ -262,27 +248,7 @@ for _, row in points_valides.iterrows():
         fill_color=couleur,
         fill_opacity=0.9,
         popup=folium.Popup(popup_html, max_width=250)
-    ).add_to(cluster_valides)
-
-# --- Cluster séparé pour les points sans statut (gris) ---
-cluster_vides = MarkerCluster(
-    name=f"⚪ Communautés sans statut ({len(points_vides)})"
-).add_to(m)
-
-for _, row in points_vides.iterrows():
-    popup_html = f"""
-    <b>{row.get('Communaute', 'Inconnue')}</b><br>
-    Statut : N/A<br>
-    """
-    folium.CircleMarker(
-        location=[row.geometry.y, row.geometry.x],
-        radius=6,
-        color="white",
-        fill=True,
-        fill_color="gray",
-        fill_opacity=0.6,
-        popup=folium.Popup(popup_html, max_width=250)
-    ).add_to(cluster_vides)
+    ).add_to(marker_cluster)
 
 # --- Contrôle des couches ---
 folium.LayerControl(collapsed=False).add_to(m)
