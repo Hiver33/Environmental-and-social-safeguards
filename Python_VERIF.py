@@ -204,16 +204,30 @@ point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
 point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
 
-# --- Jointure GeoDataFrame avec df_filtered_2 ---
-point_merged = point_gdf.merge(df_filtered_2, left_on="name", right_on="Communaute", how="left")
+# --- Agrégation des données de df_filtered_2 par communauté ---
+df_filtered_2["Communaute"] = df_filtered_2["Communaute"].str.strip().str.lower()
+agg_df = df_filtered_2.groupby("Communaute").agg(
+    total_griefs=("Communaute", "count"),
+    acheves=("Statut_traitement", lambda x: (x.isin(["Achevé","Grief non recevable"])).sum()),
+    en_cours=("Statut_traitement", lambda x: (x.isin(["En cours","Perdu de vue"])).sum()),
+    a_traiter=("Statut_traitement", lambda x: (x=="A traiter").sum()),
+    plaignants=("Plaignant_(si_anonyme_preciser)", lambda x: ", ".join(x.dropna().astype(str).unique()))
+).reset_index()
 
-# --- Fonction couleur par statut ---
-def couleur_statut(statut):
-    if isinstance(statut, str):
-        s = statut.lower()
-        if "traité" in s or "clos" in s: return "green"
-        elif "cours" in s or "en cours" in s: return "orange"
-        elif "non" in s or "à traiter" in s: return "red"
+# --- Jointure avec point_gdf ---
+point_merged = point_gdf.merge(agg_df, left_on="name", right_on="Communaute", how="left")
+
+# --- Fonction couleur par statut majoritaire ---
+def couleur_statut(row):
+    if row.total_griefs == 0 or pd.isna(row.total_griefs):
+        return "gray"
+    # Choisir la couleur selon le statut majoritaire
+    if row.acheves >= max(row.en_cours, row.a_traiter):
+        return "green"
+    elif row.en_cours >= max(row.acheves, row.a_traiter):
+        return "orange"
+    elif row.a_traiter >= max(row.acheves, row.en_cours):
+        return "red"
     return "gray"
 
 # --- Création de la carte ---
@@ -230,15 +244,18 @@ folium.GeoJson(
 # --- Cluster des points ---
 marker_cluster = MarkerCluster(name="📍 Communautés").add_to(m)
 
-# --- Ajouter tous les points ---
+# --- Ajouter tous les points agrégés ---
 for _, row in point_merged.iterrows():
-    statut = row.get("Statut_traitement", "N/A")
-    plaignant = row.get("Plaignant_(si_anonyme_preciser)", "Anonyme")
-    couleur = couleur_statut(statut)
+    if pd.isna(row.total_griefs) or row.total_griefs == 0:
+        continue
+    couleur = couleur_statut(row)
     popup_html = f"""
     <b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>
-    <b>Statut :</b> {statut}<br>
-    <b>Plaignant :</b> {plaignant}
+    <b>Total griefs :</b> {row.total_griefs}<br>
+    <b>Achevés :</b> {row.acheves}<br>
+    <b>En cours :</b> {row.en_cours}<br>
+    <b>A traiter :</b> {row.a_traiter}<br>
+    <b>Plaignants :</b> {row.plaignants if row.plaignants else 'Anonyme'}
     """
     folium.CircleMarker(
         location=[row.geometry.y, row.geometry.x],
@@ -247,7 +264,7 @@ for _, row in point_merged.iterrows():
         fill=True,
         fill_color=couleur,
         fill_opacity=0.9,
-        popup=folium.Popup(popup_html, max_width=250)
+        popup=folium.Popup(popup_html, max_width=300)
     ).add_to(marker_cluster)
 
 # --- Layer control ---
@@ -269,6 +286,7 @@ m.get_root().add_child(macro)
 
 st.subheader("📍 Carte de localisation des boîtes à grief")
 st_folium(m, width=900, height=500)
+
                   
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
