@@ -231,7 +231,10 @@ def couleur_statut(statut):
             return "red"
     return "gray"
 
-# --- Ajout des points (sans clustering) ---
+# --- Cluster pour les points ---
+marker_cluster = MarkerCluster(name="📍Communautés").add_to(m)
+
+# --- Ajout des points colorés dans le cluster ---
 for _, row in point_merged.iterrows():
     statut = row.get("Statut_traitement", "N/A")
     couleur = couleur_statut(statut)
@@ -247,7 +250,7 @@ for _, row in point_merged.iterrows():
         fill_color=couleur,
         fill_opacity=0.9,
         popup=folium.Popup(popup_html, max_width=250)
-    ).add_to(m)
+    ).add_to(marker_cluster)
 
 # --- Contrôle des couches ---
 folium.LayerControl(collapsed=False).add_to(m)
