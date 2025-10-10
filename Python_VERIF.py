@@ -87,6 +87,10 @@ if df_filtered.empty:
 df_filtered_2 = df[df["Type_depot"].isin(Types) & df["Statut_traitement"].isin(Statuts)].copy()
 if annee_choisie:
     df_filtered_2 = df_filtered_2[df_filtered_2["Année"] == annee_choisie]
+    
+# Nettoyage pour la carte
+df_filtered_2["Communaute"] = df_filtered_2["Communaute"].astype(str).str.strip().str.lower()
+df_filtered_2["Statut_traitement"] = df_filtered_2["Statut_traitement"].replace(["nan","NaN","None",""], pd.NA)
 
 #====================================================================
 # ---------------------- Apparence / Thème --------------------------
