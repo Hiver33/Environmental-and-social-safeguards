@@ -165,36 +165,32 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 # --------------------- Carte de localisation -----------------------
 #====================================================================
 # --- Liens Dropbox ---
-point_url = "https://www.dropbox.com/scl/fi/mwmz73mvwb6sp8fv9ddjj/Boite_aux_lettres.shp?rlkey=c772yrovwd4l6gm4xahj7ulh6&st=bptqslz1&dl=1"
-polygon_url = "https://www.dropbox.com/scl/fi/2zb2mjeomysc7l4rq1iuc/lim_lefini_09072020.shp?rlkey=72cqyuokctr0ry202j8rqcto6&st=w06iytlp&dl=1"
+# --- Exemple avec GeoPackage (plus robuste que SHP) ---
+point_url = "https://www.dropbox.com/scl/fi/xxxx/Boite_aux_lettres.gpkg?dl=1"
+polygon_url = "https://www.dropbox.com/scl/fi/yyyy/lim_lefini_09072020.gpkg?dl=1"
 
-# --- Créer un dossier temporaire ---
-os.makedirs("temp_shp", exist_ok=True)
+# --- Dossier temporaire ---
+os.makedirs("temp_gpkg", exist_ok=True)
 
-# --- Création des fichiers temporaires ---
-point_path = "temp_shp/Boite_aux_lettres.shp"
-polygon_path = "temp_shp/lim_lefini_09072020.shp"
-
-# --- Téléchargement depuis Dropbox ---
-for url, path in [(point_url, point_path), (polygon_url, polygon_path)]:
+# --- Téléchargement ---
+for url, path in [(point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
+                  (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")]:
     r = requests.get(url)
     if r.status_code == 200:
         with open(path, "wb") as f:
             f.write(r.content)
-        print(f"✅ Téléchargé : {path}")
-    else:
-        print(f"⚠️ Erreur téléchargement : {url}")
+        print(f"Téléchargé : {path}")
 
-# --- Lecture des shapefiles ---
-point_gdf = gpd.read_file(point_path)
-polygon_gdf = gpd.read_file(polygon_path)
+# --- Lecture directe (1 seul fichier = aucun problème) ---
+point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg")
+polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 
-# --- Reprojection automatique vers WGS84 (obligatoire pour Folium) ---
+# --- Reprojection vers WGS84 ---
 point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
 
 # --- Jointure avec ta dataframe principale (ex: df_filtered) ---
-# ⚠️ Assure-toi que "df_filtered" et les colonnes existent
+# ⚠️ S'assurer que "df_filtered" et les colonnes existent
 point_merged = point_gdf.merge(
     df_filtered,
     left_on="name",          # champ dans shapefile
