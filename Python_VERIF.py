@@ -11,6 +11,8 @@ import plotly.express as px
 import geopandas as gpd
 import folium
 import matplotlib.pyplot as plt
+import requests
+import os
 from shapely.geometry import Point
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
@@ -162,13 +164,28 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 #====================================================================
 # --------------------- Carte de localisation -----------------------
 #====================================================================
-# --- chagrement des liens ---
 point_url = "https://www.dropbox.com/scl/fi/mwmz73mvwb6sp8fv9ddjj/Boite_aux_lettres.shp?rlkey=c772yrovwd4l6gm4xahj7ulh6&st=bptqslz1&dl=1"
 polygon_url = "https://www.dropbox.com/scl/fi/2zb2mjeomysc7l4rq1iuc/lim_lefini_09072020.shp?rlkey=72cqyuokctr0ry202j8rqcto6&st=w06iytlp&dl=1"
 
-# --- lire les fichiers ---
-point_gdf = gpd.read_file(point_url)
-polygon_gdf = gpd.read_file(polugon_url)
+# --- Créer un dossier temporaire pour stocker les fichiers ---
+os.makedirs("temp_shp", exist_ok=True)
+
+# --- Création de fichiers temporaire ---
+point_path = "temp_shp/Boite_aux_lettres.shp"
+polygon_path = "temp_shp/lim_lefini_09072020.shp"
+
+for url, path in [(point_url, point_path), (polygon_url, polygon_path)]:
+    r = requests.get(url)
+    if r.status_code == 200:
+        with open(path, "wb") as f:
+            f.write(r.content)
+        print(f"Téléchargé : {path}")
+    else:
+        print(f"Erreur téléchargement : {url}")
+
+#--- Lire les shapefiles localement ---
+point_gdf = gpd.read_file(point_path)
+polygon_gdf = gpd.read_file(polygon_path)
 
 # --- reprojection automatique vers WGS84 pour folium ---
 point_gdf = point_gdf.to_crs(epsg = 4326)
