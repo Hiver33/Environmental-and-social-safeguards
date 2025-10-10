@@ -429,8 +429,10 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
     if choix_type == "Tout type":
         c1, c2 = st.columns(2)
 
+        # Comptage correct par communauté
         comm_counts = (
-            df_filtered.groupby("Communaute")
+            df_filtered.dropna(subset=["Communaute"])
+            .groupby("Communaute")
             .size()
             .reset_index(name="Nombre_de_griefs")
             .sort_values(by="Nombre_de_griefs", ascending=True)
@@ -483,11 +485,13 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
     # --- Mode "Catégoriser" : barre pleine largeur, pie en dessous
     else:
         comm_type_counts = (
-            df_filtered.groupby(["Communaute", "Type_depot"])
+            df_filtered.dropna(subset=["Communaute", "Type_depot"])
+            .groupby(["Communaute", "Type_depot"])
             .size()
             .reset_index(name="Nombre_de_griefs")
         )
 
+        # Tri croissant selon total des griefs par communauté
         ordre_tri = (
             comm_type_counts.groupby("Communaute")["Nombre_de_griefs"]
             .sum()
@@ -517,12 +521,12 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
             paper_bgcolor=graph_bg_color,
             font=dict(color=font_color),
             showlegend=True,
-            legend_title_text = "Type de dépôt"
+            legend_title_text="Type de dépôt"
         )
 
         st.plotly_chart(fig_comm, use_container_width=True)
 
-        # --- Graphique pie en dessous --
+        # --- Graphique pie en dessous ---
         if "Sexe" in df_filtered.columns:
             df_sexe = df_filtered[df_filtered["Sexe"].notna()]
             if not df_sexe.empty:
