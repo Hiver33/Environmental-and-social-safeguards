@@ -183,7 +183,7 @@ polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_0
 # --- Dossier temporaire ---
 os.makedirs("temp_gpkg", exist_ok=True)
 
-# --- Téléchargement ---
+# --- Téléchargement des fichiers ---
 for url, path in [
     (point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
     (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")
@@ -204,30 +204,13 @@ point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
 point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
 
-# --- Agrégation des données de df_filtered_2 par communauté ---
-df_filtered_2["Communaute"] = df_filtered_2["Communaute"].str.strip().str.lower()
-agg_df = df_filtered_2.groupby("Communaute").agg(
-    total_griefs=("Communaute", "count"),
-    acheves=("Statut_traitement", lambda x: (x.isin(["Achevé","Grief non recevable"])).sum()),
-    en_cours=("Statut_traitement", lambda x: (x.isin(["En cours","Perdu de vue"])).sum()),
-    a_traiter=("Statut_traitement", lambda x: (x=="A traiter").sum()),
-    plaignants=("Plaignant_(si_anonyme_preciser)", lambda x: ", ".join(x.dropna().astype(str).unique()))
-).reset_index()
-
-# --- Jointure avec point_gdf ---
-point_merged = point_gdf.merge(agg_df, left_on="name", right_on="Communaute", how="left")
-
-# --- Fonction couleur par statut majoritaire ---
-def couleur_statut(row):
-    if row.total_griefs == 0 or pd.isna(row.total_griefs):
-        return "gray"
-    # Choisir la couleur selon le statut majoritaire
-    if row.acheves >= max(row.en_cours, row.a_traiter):
-        return "green"
-    elif row.en_cours >= max(row.acheves, row.a_traiter):
-        return "orange"
-    elif row.a_traiter >= max(row.acheves, row.en_cours):
-        return "red"
+# --- Fonction couleur par statut ---
+def couleur_statut(statut):
+    if isinstance(statut, str):
+        s = statut.lower()
+        if "traité" in s or "clos" in s: return "green"
+        elif "cours" in s or "en cours" in s: return "orange"
+        elif "non" in s or "à traiter" in s: return "red"
     return "gray"
 
 # --- Création de la carte ---
@@ -237,28 +220,49 @@ m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
 folium.GeoJson(
     polygon_gdf,
     name="Domaine",
-    style_function=lambda x: {"fillColor": "#ff7800","color": "#ffffff","weight": 2,"fillOpacity": 0.3},
+    style_function=lambda x: {
+        "fillColor": "#ff7800",
+        "color": "#ffffff",
+        "weight": 2,
+        "fillOpacity": 0.3
+    },
     tooltip="Zone de projet"
 ).add_to(m)
 
-# --- Cluster des points ---
-marker_cluster = MarkerCluster(name="📍 Communautés").add_to(m)
+# --- Cluster principal pour tous les griefs ---
+marker_cluster = MarkerCluster(name="📍 Griefs individuels").add_to(m)
 
-# --- Ajouter tous les points agrégés ---
-for _, row in point_merged.iterrows():
-    if pd.isna(row.total_griefs) or row.total_griefs == 0:
+# --- Ajouter tous les griefs individuels ---
+for idx, row in df_filtered_2.iterrows():
+    comm = str(row.get("Communaute", "Inconnue")).strip().lower()
+    
+    # Récupérer les coordonnées de la communauté
+    point = point_gdf[point_gdf["name"] == comm]
+    if point.empty:
         continue
-    couleur = couleur_statut(row)
+    lat, lon = point.geometry.values[0].y, point.geometry.values[0].x
+    
+    # Couleur selon statut
+    statut = row.get("Statut_traitement", "N/A")
+    couleur = couleur_statut(statut)
+    
+    # Infos détaillées pour le popup
+    plaignant = row.get("Plaignant_(si_anonyme_preciser)", "Anonyme")
+    type_depot = row.get("Type_depot", "Inconnu")
+    nature = row.get("Nature_plainte", "Inconnue")
+    date_rec = row.get("Date_reception", "N/A")
+    
     popup_html = f"""
-    <b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>
-    <b>Total griefs :</b> {row.total_griefs}<br>
-    <b>Achevés :</b> {row.acheves}<br>
-    <b>En cours :</b> {row.en_cours}<br>
-    <b>A traiter :</b> {row.a_traiter}<br>
-    <b>Plaignants :</b> {row.plaignants if row.plaignants else 'Anonyme'}
+    <b>Communauté :</b> {comm}<br>
+    <b>Type :</b> {type_depot}<br>
+    <b>Nature :</b> {nature}<br>
+    <b>Date réception :</b> {date_rec}<br>
+    <b>Statut :</b> {statut}<br>
+    <b>Plaignant :</b> {plaignant}
     """
+    
     folium.CircleMarker(
-        location=[row.geometry.y, row.geometry.x],
+        location=[lat, lon],
         radius=6,
         color="white",
         fill=True,
@@ -269,6 +273,8 @@ for _, row in point_merged.iterrows():
 
 # --- Layer control ---
 folium.LayerControl(collapsed=False).add_to(m)
+
+# --- CSS pour réduire la taille du LayerControl ---
 macro = MacroElement()
 macro._template = Template("""
 {% macro html(this, kwargs) %}
@@ -284,10 +290,9 @@ macro._template = Template("""
 """)
 m.get_root().add_child(macro)
 
-st.subheader("📍 Carte de localisation des boîtes à grief")
+# --- Affichage Streamlit ---
+st.subheader("📍 Carte de localisation des boîtes à grief (points séparables au zoom)")
 st_folium(m, width=900, height=500)
-
-                  
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
 #====================================================================
