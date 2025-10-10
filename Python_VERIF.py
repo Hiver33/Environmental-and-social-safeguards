@@ -237,7 +237,7 @@ folium.LayerControl(collapsed=False).add_to(m)
 
 # --- Affichage dans Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
-st_folium(m, width=900, height=600)
+st_folium(m, width=900, height=500)
                   
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
