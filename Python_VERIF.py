@@ -238,8 +238,15 @@ marker_cluster = MarkerCluster(
 # --- Ajouter tous les points ---
 for _, row in point_merged.iterrows():
     statut = row.get("Statut_traitement", "N/A")
+    plaignant = row.get("Plaignant_(si_anonyme_preciser)", "Anonyme")
     couleur = couleur_statut(statut)
-    popup_html = f"<b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br><b>Statut :</b> {statut}"
+    
+    popup_html = f"""
+    <b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>
+    <b>Statut :</b> {statut}<br>
+    <b>Plaignant :</b> {plaignant}
+    """
+    
     folium.CircleMarker(
         location=[row.geometry.y, row.geometry.x],
         radius=6,
