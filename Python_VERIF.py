@@ -200,7 +200,7 @@ point_merged = point_gdf.merge(
 
 # --- Création de la carte ---
 m = folium.Map(
-    location=[-1, 17],        # longitude corrigée (pas 157 sinon tu tombes dans le Pacifique 😅)
+    location=[-0.8, 17],        # longitude corrigée (pas 157 sinon tu tombes dans le Pacifique 😅)
     zoom_start=6,
     tiles="CartoDB dark_matter"  # bon nom du fond sombre
 )
