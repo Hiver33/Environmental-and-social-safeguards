@@ -257,27 +257,6 @@ for _, row in point_merged.iterrows():
         popup=folium.Popup(popup_html, max_width=250)
     ).add_to(marker_cluster)
 
-# --- Calcul des totaux ---
-total_points = len(point_merged)
-points_valides = point_merged["Statut_traitement"].notna().sum()
-points_vides = total_points - points_valides
-
-# --- Affichage dans un petit encadré ---
-st.markdown(f"""
-<div style="
-    background-color: rgba(0,0,0,0.7); 
-    color: white; 
-    padding: 6px; 
-    border-radius: 5px; 
-    font-size: 12px;
-    width: fit-content;
-">
-<b>Total points :</b> {total_points} <br>
-<b>Avec statut :</b> {points_valides} <br>
-<b>Sans statut :</b> {points_vides}
-</div>
-""", unsafe_allow_html=True)
-
 # --- Contrôle des couches ---
 folium.LayerControl(collapsed=False).add_to(m)
 
