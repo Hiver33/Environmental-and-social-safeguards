@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Point
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
+from branca.element import Template, MacroElemen
 from datetime import datetime
 
 #=================================================================
