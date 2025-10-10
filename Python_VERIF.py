@@ -165,14 +165,14 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 # --------------------- Carte de localisation -----------------------
 #====================================================================
 # --- Liens Dropbox ---
-# --- Exemple avec GeoPackage (plus robuste que SHP) ---
+# --- Liens Dropbox (GeoPackage recommandés) ---
 point_url = "https://www.dropbox.com/scl/fi/rgf74oa5eldfci8f5lems/Boite_aux_lettres.gpkg?rlkey=b6r4flk6158dy4mze9m8f81rp&st=dcgum783&dl=1"
 polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_09072020.gpkg?rlkey=15vxwezrwbo11rtfuxh2z91un&st=c05wbp5m&dl=1"
 
 # --- Dossier temporaire ---
 os.makedirs("temp_gpkg", exist_ok=True)
 
-# --- Téléchargement ---
+# --- Téléchargement depuis Dropbox ---
 for url, path in [(point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
                   (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")]:
     r = requests.get(url)
@@ -180,8 +180,10 @@ for url, path in [(point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
         with open(path, "wb") as f:
             f.write(r.content)
         print(f"Téléchargé : {path}")
+    else:
+        print(f"Erreur téléchargement : {url}")
 
-# --- Lecture directe (1 seul fichier = aucun problème) ---
+# --- Lecture directe des GeoPackages ---
 point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg")
 polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 
@@ -189,8 +191,7 @@ polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
 
-# --- Jointure avec ta dataframe principale (ex: df_filtered) ---
-# ⚠️ S'assurer que "df_filtered" et les colonnes existent
+# --- Jointure avec ta dataframe principale ---
 point_merged = point_gdf.merge(
     df_filtered,
     left_on="name",          # champ dans shapefile
@@ -200,12 +201,12 @@ point_merged = point_gdf.merge(
 
 # --- Création de la carte ---
 m = folium.Map(
-    location=[-0.8, 17],        # longitude corrigée (pas 157 sinon tu tombes dans le Pacifique 😅)
+    location=[-0.8, 17],
     zoom_start=6,
-    tiles="CartoDB dark_matter"  # bon nom du fond sombre
+    tiles="CartoDB dark_matter"
 )
 
-# --- Ajout du domaine de projet (polygone) ---
+# --- Ajout du polygone du domaine ---
 folium.GeoJson(
     polygon_gdf,
     name="Domaine",
@@ -218,24 +219,40 @@ folium.GeoJson(
     tooltip="Zone de projet"
 ).add_to(m)
 
-# --- Ajout des points (boîtes à griefs) ---
-marker_cluster = MarkerCluster(name="📍Communautés").add_to(m)
+# --- Définir les couleurs selon le statut ---
+def couleur_statut(statut):
+    if isinstance(statut, str):
+        s = statut.strip().lower()
+        if "traité" in s or "clos" in s:
+            return "green"
+        elif "cours" in s or "en cours" in s:
+            return "orange"
+        elif "non" in s or "à traiter" in s:
+            return "red"
+    return "gray"
 
+# --- Ajout des points (sans clustering) ---
 for _, row in point_merged.iterrows():
+    statut = row.get("Statut_traitement", "N/A")
+    couleur = couleur_statut(statut)
     popup_html = f"""
     <b>{row.get('Communaute', 'Inconnue')}</b><br>
-    Statut : {row.get('Statut_traitement', 'N/A')}<br>
+    Statut : {statut}<br>
     """
-    folium.Marker(
+    folium.CircleMarker(
         location=[row.geometry.y, row.geometry.x],
-        popup=folium.Popup(popup_html, max_width=250),
-        icon=folium.Icon(color="lightgreen", icon="info-sign")
-    ).add_to(marker_cluster)
+        radius=6,
+        color="white",
+        fill=True,
+        fill_color=couleur,
+        fill_opacity=0.9,
+        popup=folium.Popup(popup_html, max_width=250)
+    ).add_to(m)
 
 # --- Contrôle des couches ---
 folium.LayerControl(collapsed=False).add_to(m)
 
-# --- Affichage dans Streamlit ---
+# --- Affichage Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
 st_folium(m, width=900, height=500)
                   
