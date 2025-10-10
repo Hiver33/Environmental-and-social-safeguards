@@ -75,12 +75,23 @@ annee_choisie = st.sidebar.selectbox(
 Types = st.sidebar.multiselect("📂 Type de dépôt :", df["Type_depot"].unique(), default=df["Type_depot"].unique())
 Statuts = st.sidebar.multiselect("✅ Statut de traitement :", df["Statut_traitement"].unique(), default=df["Statut_traitement"].unique())
 
+# --- Dataframe filtré pour les graphiques ---
 df_filtered = df[df["Type_depot"].isin(Types) & df["Statut_traitement"].isin(Statuts)]
 if annee_choisie:
     df_filtered = df_filtered[df_filtered["Année"] == annee_choisie]
 if df_filtered.empty:
     st.warning("Aucun enregistrement après filtrage")
     st.stop()
+
+# --- Dataframe filtré pour la carte ---
+df_filtered_2 = df[df["Type_depot"].isin(Types) & df["Statut_traitement"].isin(Statuts)].copy()
+if annee_choisie:
+    df_filtered_2 = df_filtered_2[df_filtered_2["Année"] == annee_choisie]
+
+# Nettoyage pour la carte
+df_filtered_2["Communaute"] = df_filtered_2["Communaute"].astype(str).str.strip().str.lower()
+df_filtered_2["Statut_traitement"] = df_filtered_2["Statut_traitement"].replace(["nan","NaN","None",""], pd.NA)
+df_filtered_2 = df_filtered_2.drop_duplicates(subset=["Communaute"])
 
 #====================================================================
 # ---------------------- Apparence / Thème --------------------------
@@ -188,23 +199,13 @@ for url, path in [
 point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg")
 polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 
-# --- Reprojection vers WGS84 pour Folium ---
+# --- Reprojection vers WGS84 ---
 point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
-
-# --- Nettoyage pour jointure fiable ---
 point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
-df_filtered["Communaute"] = df_filtered["Communaute"].str.strip().str.lower()
-df_filtered["Statut_traitement"] = df_filtered["Statut_traitement"].replace(["nan","NaN","None",""], pd.NA)
-df_filtered = df_filtered.drop_duplicates(subset=["Communaute"])
 
-# --- Jointure GeoDataFrame avec dataframe ---
-point_merged = point_gdf.merge(
-    df_filtered,
-    left_on="name",
-    right_on="Communaute",
-    how="left"
-)
+# --- Jointure GeoDataFrame avec df_filtered_2 ---
+point_merged = point_gdf.merge(df_filtered_2, left_on="name", right_on="Communaute", how="left")
 
 # --- Fonction couleur par statut ---
 def couleur_statut(statut):
@@ -222,12 +223,7 @@ m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
 folium.GeoJson(
     polygon_gdf,
     name="Domaine",
-    style_function=lambda x: {
-        "fillColor": "#ff7800",
-        "color": "#ffffff",
-        "weight": 2,
-        "fillOpacity": 0.3
-    },
+    style_function=lambda x: {"fillColor": "#ff7800","color": "#ffffff","weight": 2,"fillOpacity": 0.3},
     tooltip="Zone de projet"
 ).add_to(m)
 
@@ -239,13 +235,11 @@ for _, row in point_merged.iterrows():
     statut = row.get("Statut_traitement", "N/A")
     plaignant = row.get("Plaignant_(si_anonyme_preciser)", "Anonyme")
     couleur = couleur_statut(statut)
-    
     popup_html = f"""
     <b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>
     <b>Statut :</b> {statut}<br>
     <b>Plaignant :</b> {plaignant}
     """
-    
     folium.CircleMarker(
         location=[row.geometry.y, row.geometry.x],
         radius=6,
@@ -256,11 +250,10 @@ for _, row in point_merged.iterrows():
         popup=folium.Popup(popup_html, max_width=250)
     ).add_to(marker_cluster)
 
-# --- Contrôle des couches (LayerControl compact) ---
+# --- Layer control ---
 folium.LayerControl(collapsed=False).add_to(m)
-
-# --- CSS pour réduire taille LayerControl ---
-layercontrol_css = """
+macro = MacroElement()
+macro._template = Template("""
 {% macro html(this, kwargs) %}
 <style>
 .leaflet-control-layers {
@@ -271,12 +264,9 @@ layercontrol_css = """
 }
 </style>
 {% endmacro %}
-"""
-macro = MacroElement()
-macro._template = Template(layercontrol_css)
+""")
 m.get_root().add_child(macro)
 
-# --- Affichage Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
 st_folium(m, width=900, height=500)
                   
