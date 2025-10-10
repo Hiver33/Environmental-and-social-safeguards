@@ -422,16 +422,24 @@ choix_type = st.radio(
     key="choix_type_comm"
 )
 
+# --- Nettoyage complet de la colonne 'Communaute' ---
+df_filtered["Communaute"] = (
+    df_filtered["Communaute"]
+    .astype(str)
+    .str.strip()
+    .str.lower()
+)
+
 # --- Vérification des colonnes requises ---
 if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
 
-    # --- Mode "Tout type" : deux colonnes côte à côte
+    # --- Mode "Tout type" : deux colonnes côte à côte ---
     if choix_type == "Tout type":
         c1, c2 = st.columns(2)
 
-        # Compter correctement le nombre de griefs par communauté
+        # Comptage correct des griefs par communauté
         comm_counts = (
-            df_filtered.groupby("Communaute")
+            df_filtered.groupby("Communaute", dropna=False)
             .size()
             .reset_index(name="Nombre_de_griefs")
             .sort_values(by="Nombre_de_griefs", ascending=True)
@@ -481,11 +489,10 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
                 )
                 c2.plotly_chart(fig_sexe, use_container_width=True)
 
-    # --- Mode "Catégoriser" : barre pleine largeur, pie en dessous
+    # --- Mode "Catégoriser" : barre pleine largeur, pie en dessous ---
     else:
-        # Compter le nombre de griefs par communauté et type
         comm_type_counts = (
-            df_filtered.groupby(["Communaute", "Type_depot"])
+            df_filtered.groupby(["Communaute", "Type_depot"], dropna=False)
             .size()
             .reset_index(name="Nombre_de_griefs")
         )
