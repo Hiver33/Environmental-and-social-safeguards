@@ -220,47 +220,40 @@ m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
 folium.GeoJson(
     polygon_gdf,
     name="Domaine",
-    style_function=lambda x: {
-        "fillColor": "#ff7800",
-        "color": "#ffffff",
-        "weight": 2,
-        "fillOpacity": 0.3
-    },
+    style_function=lambda x: {"fillColor": "#ff7800","color": "#ffffff","weight": 2,"fillOpacity": 0.3},
     tooltip="Zone de projet"
 ).add_to(m)
 
-# --- Cluster principal pour tous les griefs ---
+# --- Merge pour avoir la géométrie pour chaque grief ---
+df_geo = df_filtered_2.merge(
+    point_gdf[["name", "geometry"]],
+    left_on="Communaute",
+    right_on="name",
+    how="left"
+).dropna(subset=["geometry"])
+
+# --- Cluster des points ---
 marker_cluster = MarkerCluster(name="📍 Griefs individuels").add_to(m)
 
-# --- Ajouter tous les griefs individuels ---
-for idx, row in df_filtered_2.iterrows():
-    comm = str(row.get("Communaute", "Inconnue")).strip().lower()
-    
-    # Récupérer les coordonnées de la communauté
-    point = point_gdf[point_gdf["name"] == comm]
-    if point.empty:
-        continue
-    lat, lon = point.geometry.values[0].y, point.geometry.values[0].x
-    
-    # Couleur selon statut
+# --- Ajouter tous les griefs individuellement ---
+for idx, row in df_geo.iterrows():
+    lat, lon = row.geometry.y, row.geometry.x
     statut = row.get("Statut_traitement", "N/A")
     couleur = couleur_statut(statut)
-    
-    # Infos détaillées pour le popup
     plaignant = row.get("Plaignant_(si_anonyme_preciser)", "Anonyme")
     type_depot = row.get("Type_depot", "Inconnu")
     nature = row.get("Nature_plainte", "Inconnue")
     date_rec = row.get("Date_reception", "N/A")
-    
+
     popup_html = f"""
-    <b>Communauté :</b> {comm}<br>
+    <b>Communauté :</b> {row['Communaute']}<br>
     <b>Type :</b> {type_depot}<br>
     <b>Nature :</b> {nature}<br>
     <b>Date réception :</b> {date_rec}<br>
     <b>Statut :</b> {statut}<br>
     <b>Plaignant :</b> {plaignant}
     """
-    
+
     folium.CircleMarker(
         location=[lat, lon],
         radius=6,
@@ -271,10 +264,8 @@ for idx, row in df_filtered_2.iterrows():
         popup=folium.Popup(popup_html, max_width=300)
     ).add_to(marker_cluster)
 
-# --- Layer control ---
+# --- Contrôle des couches (LayerControl compact) ---
 folium.LayerControl(collapsed=False).add_to(m)
-
-# --- CSS pour réduire la taille du LayerControl ---
 macro = MacroElement()
 macro._template = Template("""
 {% macro html(this, kwargs) %}
@@ -290,9 +281,10 @@ macro._template = Template("""
 """)
 m.get_root().add_child(macro)
 
-# --- Affichage Streamlit ---
-st.subheader("📍 Carte de localisation des boîtes à grief (points séparables au zoom)")
+# --- Affichage dans Streamlit ---
+st.subheader("📍 Carte de localisation des boîtes à grief")
 st_folium(m, width=900, height=500)
+
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
 #====================================================================
