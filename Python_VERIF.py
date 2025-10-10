@@ -413,7 +413,7 @@ st.plotly_chart(fig_nature, use_container_width=True)
 #-------------------------------------------------------------------------------------
 
 st.subheader("🏘️ Répartition par communauté et genre")
-# --- Répartition Communauté / Genre ---
+
 # --- 🔘 Bouton radio pour le mode d'affichage ---
 choix_type = st.radio(
     "Afficher selon :",
@@ -429,10 +429,9 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
     if choix_type == "Tout type":
         c1, c2 = st.columns(2)
 
-        # Comptage correct par communauté
+        # Compter correctement le nombre de griefs par communauté
         comm_counts = (
-            df_filtered.dropna(subset=["Communaute"])
-            .groupby("Communaute")
+            df_filtered.groupby("Communaute")
             .size()
             .reset_index(name="Nombre_de_griefs")
             .sort_values(by="Nombre_de_griefs", ascending=True)
@@ -484,14 +483,13 @@ if "Communaute" in df_filtered.columns and "Type_depot" in df_filtered.columns:
 
     # --- Mode "Catégoriser" : barre pleine largeur, pie en dessous
     else:
+        # Compter le nombre de griefs par communauté et type
         comm_type_counts = (
-            df_filtered.dropna(subset=["Communaute", "Type_depot"])
-            .groupby(["Communaute", "Type_depot"])
+            df_filtered.groupby(["Communaute", "Type_depot"])
             .size()
             .reset_index(name="Nombre_de_griefs")
         )
 
-        # Tri croissant selon total des griefs par communauté
         ordre_tri = (
             comm_type_counts.groupby("Communaute")["Nombre_de_griefs"]
             .sum()
