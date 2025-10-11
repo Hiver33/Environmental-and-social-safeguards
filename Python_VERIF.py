@@ -284,7 +284,7 @@ m.get_root().add_child(macro)
 # --- Affichage Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
 total_point = len(point_merged)
-st.markdown(f"**Nombre total de boîtes: {total_point}**")
+st.markdown(f"**Nombre total installé : {total_point}**")
 st_folium(m, width=900, height=430)
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
