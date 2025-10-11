@@ -213,7 +213,7 @@ def couleur_statut(statut):
     return "gray"
 
 # --- Création de la carte ---
-m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
+m = folium.Map(location=[-0.7, 17], zoom_start=5, tiles="CartoDB dark_matter")
 
 # --- Polygone Domaine ---
 folium.GeoJson(
