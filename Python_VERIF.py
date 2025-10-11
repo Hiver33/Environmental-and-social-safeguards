@@ -177,112 +177,156 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 #====================================================================
 # --- Liens Dropbox ---
 @st.cache_data(show_spinner=False)
-def telecharger_fichier(url, chemin):
-    """Télécharge un fichier depuis Dropbox si non présent."""
-    if not os.path.exists(chemin):
-        r = requests.get(url)
-        if r.status_code == 200:
-            with open(chemin, "wb") as f:
-                f.write(r.content)
-        else:
-            st.error(f"Erreur téléchargement : {url}")
-    return chemin
-
-
-@st.cache_data(show_spinner=False)
 def charger_geopackage(point_url, polygon_url):
-    """Télécharge et charge les GeoPackages."""
     os.makedirs("temp_gpkg", exist_ok=True)
 
-    point_path = telecharger_fichier(point_url, "temp_gpkg/Boite_aux_lettres.gpkg")
-    polygon_path = telecharger_fichier(polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")
+    for url, path in [
+        (point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
+        (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")
+    ]:
+        if not os.path.exists(path):
+            r = requests.get(url)
+            if r.status_code == 200:
+                with open(path, "wb") as f:
+                    f.write(r.content)
+            else:
+                st.error(f"Erreur de téléchargement : {url}")
 
-    point_gdf = gpd.read_file(point_path).to_crs(epsg=4326)
-    polygon_gdf = gpd.read_file(polygon_path).to_crs(epsg=4326)
-
+    point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg").to_crs(epsg=4326)
+    polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg").to_crs(epsg=4326)
     return point_gdf, polygon_gdf
 
-
-@st.cache_data(show_spinner=False)
+# --- Préparation des données sans cache (pour éviter erreur) ---
 def preparer_donnees(point_gdf, df_filtered_2):
-    """Prépare les données fusionnées avec stats griefs."""
+    # Normalisation des noms
     point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
     df_filtered_2["Communaute"] = df_filtered_2["Communaute"].str.strip().str.lower()
 
-    # Agrégation par communauté
+    # --- Comptage des statuts par communauté ---
     stats = (
         df_filtered_2.groupby("Communaute")["Statut_traitement"]
         .value_counts()
         .unstack(fill_value=0)
         .reset_index()
     )
+
+    # Ajout du total par communauté
     stats["Total_griefs"] = stats.drop(columns="Communaute").sum(axis=1)
 
+    # --- Fusion ---
     merged = point_gdf.merge(stats, left_on="name", right_on="Communaute", how="left")
     return merged
 
-# --- Chargement des données ---
+# --- Fonction de couleur par statut dominant ---
+def couleur_statut(row):
+    # Définir la couleur en fonction du statut dominant
+    if pd.isna(row.get("Total_griefs")) or row["Total_griefs"] == 0:
+        return "gray"
 
+    # Statuts typiques
+    statut_keys = row.keys().tolist()
+    statuts = ["achevé", "en cours", "à traiter", "perdu de vue", "non recevable"]
+
+    # Trouver le statut le plus représenté
+    dominant = None
+    max_val = 0
+    for s in statut_keys:
+        if any(x in s.lower() for x in statuts):
+            val = row[s]
+            if val > max_val:
+                max_val = val
+                dominant = s.lower()
+
+    # Couleur selon statut dominant
+    if dominant is None:
+        return "gray"
+    elif "achevé" in dominant or "clos" in dominant:
+        return "green"
+    elif "cours" in dominant:
+        return "orange"
+    elif "perdu" in dominant:
+        return "purple"
+    elif "à traiter" in dominant or "non" in dominant:
+        return "red"
+    else:
+        return "gray"
+
+# --- Création de la carte ---
+def afficher_carte(point_gdf, polygon_gdf):
+    m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
+
+    # --- Polygone du domaine ---
+    folium.GeoJson(
+        polygon_gdf,
+        name="Domaine",
+        style_function=lambda x: {
+            "fillColor": "#ff7800",
+            "color": "#ffffff",
+            "weight": 2,
+            "fillOpacity": 0.3,
+        },
+        tooltip="Zone de projet"
+    ).add_to(m)
+
+    # --- Cluster des points ---
+    marker_cluster = MarkerCluster(name="📍 Communautés").add_to(m)
+
+    # --- Ajouter les points ---
+    for _, row in point_gdf.iterrows():
+        couleur = couleur_statut(row)
+        total = row.get("Total_griefs", 0)
+
+        popup_html = f"""
+        <b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>
+        <b>Total griefs :</b> {int(total)}<br>
+        """
+
+        # Ajouter les différents statuts dans le popup
+        for col in row.index:
+            if col not in ["geometry", "Communaute", "name", "Total_griefs"]:
+                val = row[col]
+                if isinstance(val, (int, float)) and val > 0:
+                    popup_html += f"{col} : {int(val)}<br>"
+
+        folium.CircleMarker(
+            location=[row.geometry.y, row.geometry.x],
+            radius=6,
+            color="white",
+            fill=True,
+            fill_color=couleur,
+            fill_opacity=0.9,
+            popup=folium.Popup(popup_html, max_width=250)
+        ).add_to(marker_cluster)
+
+    # --- Personnalisation du panneau de couches ---
+    macro = MacroElement()
+    macro._template = Template("""
+    {% macro html(this, kwargs) %}
+    <style>
+    .leaflet-control-layers {
+        font-size: 10px !important;
+        line-height: 1.1 !important;
+        max-height: 150px !important;
+        overflow-y: auto !important;
+    }
+    </style>
+    {% endmacro %}
+    """)
+    m.get_root().add_child(macro)
+
+    folium.LayerControl(collapsed=False).add_to(m)
+    return m
+
+# --- Chargement des données et affichage ---
 point_url = "https://www.dropbox.com/scl/fi/rgf74oa5eldfci8f5lems/Boite_aux_lettres.gpkg?rlkey=b6r4flk6158dy4mze9m8f81rp&st=dcgum783&dl=1"
 polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_09072020.gpkg?rlkey=15vxwezrwbo11rtfuxh2z91un&st=c05wbp5m&dl=1"
 
 point_gdf, polygon_gdf = charger_geopackage(point_url, polygon_url)
 merged = preparer_donnees(point_gdf, df_filtered_2)
 
-# --- Création de la carte ---
-
-m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
-
-# --- Polygone du domaine ---
-folium.GeoJson(
-    polygon_gdf,
-    name="Domaine",
-    style_function=lambda x: {
-        "fillColor": "#ff7800",
-        "color": "#ffffff",
-        "weight": 2,
-        "fillOpacity": 0.3,
-    },
-    tooltip="Zone de projet",
-).add_to(m)
-
-
-def couleur_point(total):
-    if pd.isna(total) or total == 0:
-        return "gray"
-    else:
-        return "lightgreen"
-
-marker_cluster = MarkerCluster(name="📍 Communautés").add_to(m)
-
-for _, row in merged.iterrows():
-    total = row.get("Total_griefs", 0)
-    couleur = couleur_point(total)
-
-    popup_html = f"<b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>"
-    popup_html += f"<b>Total griefs :</b> {int(total) if not pd.isna(total) else 0}<br>"
-
-    for col in merged.columns:
-        if col not in ["geometry", "name", "Communaute", "Total_griefs"]:
-            count = row.get(col, 0)
-            if not pd.isna(count) and count > 0:
-                popup_html += f"• {col} : {int(count)}<br>"
-
-    folium.CircleMarker(
-        location=[row.geometry.y, row.geometry.x],
-        radius=6,
-        color="white",
-        fill=True,
-        fill_color=couleur,
-        fill_opacity=0.9,
-        popup=folium.Popup(popup_html, max_width=250),
-    ).add_to(marker_cluster)
-
-folium.LayerControl(collapsed=False).add_to(m)
-
-# --- Affichage Streamlit ----
-st.subheader("📍 Carte de localisation des communautés et griefs")
-st_folium(m, width=900, height=500)
+# --- Affichage ---
+st.subheader("📍 Carte de localisation des boîtes à grief")
+st_folium(afficher_carte(merged, polygon_gdf), width=900, height=500)
 
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
