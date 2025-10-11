@@ -184,7 +184,7 @@ def charger_donnees():
 
     os.makedirs("temp_gpkg", exist_ok=True)
 
-    # Téléchargement local si nécessaire
+    # --- Téléchargement local si nécessaire ---
     fichiers = [
         (point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
         (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg"),
@@ -196,7 +196,7 @@ def charger_donnees():
                 with open(path, "wb") as f:
                     f.write(r.content)
 
-    # Lecture GeoPackages
+    # --- Lecture GeoPackages ---
     point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg").to_crs(epsg=4326)
     polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg").to_crs(epsg=4326)
     point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
@@ -222,7 +222,7 @@ def couleur_statut(statut):
     return "gray"
 
 # --- 🗺️ Création de la carte Folium ---
-m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB positron")
+m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
 
 # --- Domaine projet
 folium.GeoJson(
@@ -246,14 +246,14 @@ for _, row in point_merged.iterrows():
     plaignant = row.get("Plaignant_(si_anonyme_preciser)", "Anonyme")
     couleur = couleur_statut(statut)
 
-    # Popup simple mais informatif
+    # --- Popup simple mais informatif ---
     popup_html = f"""
     <b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>
     <b>Statut :</b> {statut}<br>
     <b>Plaignant :</b> {plaignant}
     """
 
-    # Chaque grief = un point distinct
+    # --- Chaque grief = un point distinct ---
     if row.geometry and not row.geometry.is_empty:
         folium.CircleMarker(
             location=[row.geometry.y, row.geometry.x],
