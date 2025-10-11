@@ -281,8 +281,7 @@ macro._template = Template("""
 m.get_root().add_child(macro)
 
 # --- Affichage dans Streamlit ---
-st.subheader("📍 Carte de localisation des boîtes à grief")
-st_folium(m, width=900, height=500)
+st.subheader("📍 Carte de local400)
 
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
