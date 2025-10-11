@@ -176,113 +176,101 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 # --------------------- Carte de localisation -----------------------
 #====================================================================
 # --- Liens Dropbox ---
-point_url = "https://www.dropbox.com/scl/fi/rgf74oa5eldfci8f5lems/Boite_aux_lettres.gpkg?rlkey=b6r4flk6158dy4mze9m8f81rp&st=dcgum783&dl=1"
-polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_09072020.gpkg?rlkey=15vxwezrwbo11rtfuxh2z91un&st=c05wbp5m&dl=1"
+@st.cache_data
+def charger_donnees():
+    # Liens Dropbox
+    point_url = "https://www.dropbox.com/scl/fi/rgf74oa5eldfci8f5lems/Boite_aux_lettres.gpkg?rlkey=b6r4flk6158dy4mze9m8f81rp&st=dcgum783&dl=1"
+    polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_09072020.gpkg?rlkey=15vxwezrwbo11rtfuxh2z91un&st=c05wbp5m&dl=1"
 
-# --- Dossier temporaire ---
-os.makedirs("temp_gpkg", exist_ok=True)
+    os.makedirs("temp_gpkg", exist_ok=True)
 
-# --- Téléchargement des fichiers ---
-for url, path in [
-    (point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
-    (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")
-]:
-    r = requests.get(url)
-    if r.status_code == 200:
-        with open(path, "wb") as f:
-            f.write(r.content)
-    else:
-        st.error(f"Erreur téléchargement : {url}")
+    # Téléchargement local si nécessaire
+    fichiers = [
+        (point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
+        (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg"),
+    ]
+    for url, path in fichiers:
+        if not os.path.exists(path):
+            r = requests.get(url)
+            if r.status_code == 200:
+                with open(path, "wb") as f:
+                    f.write(r.content)
 
-# --- Lecture GeoPackages ---
-point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg")
-polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
+    # Lecture GeoPackages
+    point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg").to_crs(epsg=4326)
+    polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg").to_crs(epsg=4326)
+    point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
 
-# --- Reprojection vers WGS84 ---
-point_gdf = point_gdf.to_crs(epsg=4326)
-polygon_gdf = polygon_gdf.to_crs(epsg=4326)
-point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
+    return point_gdf, polygon_gdf
 
-# --- Fonction couleur par statut ---
+point_gdf, polygon_gdf = charger_donnees()
+
+# --- 🧩 Jointure avec les données filtrées ---
+# df_filtered_2 doit déjà exister dans ton code principal
+point_merged = point_gdf.merge(df_filtered_2, left_on="name", right_on="Communaute", how="left")
+
+# --- 🎨 Fonction couleur selon statut ---
 def couleur_statut(statut):
     if isinstance(statut, str):
         s = statut.lower()
-        if "traité" in s or "clos" in s: return "green"
-        elif "cours" in s or "en cours" in s: return "orange"
-        elif "non" in s or "à traiter" in s: return "red"
+        if "traité" in s or "clos" in s:
+            return "green"
+        elif "cours" in s or "en cours" in s:
+            return "orange"
+        elif "non" in s or "à traiter" in s:
+            return "red"
     return "gray"
 
-# --- Création de la carte ---
-m = folium.Map(location=[-0.7, 17], zoom_start=6, tiles="CartoDB dark_matter")
+# --- 🗺️ Création de la carte Folium ---
+m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB positron")
 
-# --- Polygone Domaine ---
+# --- Domaine projet
 folium.GeoJson(
     polygon_gdf,
-    name="Domaine",
-    style_function=lambda x: {"fillColor": "#ff7800","color": "#ffffff","weight": 2,"fillOpacity": 0.3},
-    tooltip="Zone de projet"
+    name="Zone du projet",
+    style_function=lambda x: {
+        "fillColor": "#3186cc",
+        "color": "#ffffff",
+        "weight": 1,
+        "fillOpacity": 0.2
+    },
+    tooltip="Zone du projet"
 ).add_to(m)
 
-# --- Merge pour avoir la géométrie pour chaque grief ---
-df_geo = df_filtered_2.merge(
-    point_gdf[["name", "geometry"]],
-    left_on="Communaute",
-    right_on="name",
-    how="left"
-).dropna(subset=["geometry"])
+# --- Cluster des points
+marker_cluster = MarkerCluster(name="📍 Communautés").add_to(m)
 
-# --- Cluster des points ---
-marker_cluster = MarkerCluster(name="📍 Griefs individuels").add_to(m)
-
-# --- Ajouter tous les griefs individuellement ---
-for idx, row in df_geo.iterrows():
-    lat, lon = row.geometry.y, row.geometry.x
-    statut = row.get("Statut_traitement", "N/A")
-    couleur = couleur_statut(statut)
+# --- Ajout des points individuels
+for _, row in point_merged.iterrows():
+    statut = row.get("Statut_traitement", "Non défini")
     plaignant = row.get("Plaignant_(si_anonyme_preciser)", "Anonyme")
-    type_depot = row.get("Type_depot", "Inconnu")
-    nature = row.get("Nature_plainte", "Inconnue")
-    date_rec = row.get("Date_reception", "N/A")
+    couleur = couleur_statut(statut)
 
+    # Popup simple mais informatif
     popup_html = f"""
-    <b>Communauté :</b> {row['Communaute']}<br>
-    <b>Type :</b> {type_depot}<br>
-    <b>Nature :</b> {nature}<br>
-    <b>Date réception :</b> {date_rec}<br>
+    <b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>
     <b>Statut :</b> {statut}<br>
     <b>Plaignant :</b> {plaignant}
     """
 
-    folium.CircleMarker(
-        location=[lat, lon],
-        radius=6,
-        color="white",
-        fill=True,
-        fill_color=couleur,
-        fill_opacity=0.9,
-        popup=folium.Popup(popup_html, max_width=300)
-    ).add_to(marker_cluster)
+    # Chaque grief = un point distinct
+    if row.geometry and not row.geometry.is_empty:
+        folium.CircleMarker(
+            location=[row.geometry.y, row.geometry.x],
+            radius=4,
+            color="white",
+            fill=True,
+            fill_color=couleur,
+            fill_opacity=0.9,
+            popup=folium.Popup(popup_html, max_width=250)
+        ).add_to(marker_cluster)
 
-# --- Contrôle des couches (LayerControl compact) ---
-folium.LayerControl(collapsed=False).add_to(m)
-macro = MacroElement()
-macro._template = Template("""
-{% macro html(this, kwargs) %}
-<style>
-.leaflet-control-layers {
-    font-size: 10px !important;
-    line-height: 1.1 !important;
-    max-height: 150px !important;
-    overflow-y: auto !important;
-}
-</style>
-{% endmacro %}
-""")
-m.get_root().add_child(macro)
+# --- Contrôle des couches
+folium.LayerControl(collapsed=True).add_to(m)
 
-# --- Affichage dans Streamlit ---
-st.subheader("📍 Carte de localisation des boîtes à grief")
-st_folium(m, width = 800, height = 420)
+# --- 🖼️ Affichage Streamlit ---
+st.subheader("📍 Carte de localisation des griefs")
+st_folium(m, width=900, height=430)
 
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
