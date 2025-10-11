@@ -228,7 +228,7 @@ def couleur_point(total):
     return "gray" if total == 0 else "blue"
 
 # --- Création de la carte ---
-m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
+m = folium.Map(location=[-0.7, 17], zoom_start=6, tiles="CartoDB dark_matter")
 
 # --- Ajout du polygone ---
 folium.GeoJson(
