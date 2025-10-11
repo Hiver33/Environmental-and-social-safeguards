@@ -283,7 +283,7 @@ m.get_root().add_child(macro)
 
 # --- Affichage Streamlit ---
 st.subheader("📍 Carte de localisation des communautés")
-st_folium(m, width=900, height=500)
+st_folium(m, width=900, height=430)
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
 #====================================================================
