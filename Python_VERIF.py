@@ -175,7 +175,6 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 #====================================================================
 # --------------------- Carte de localisation -----------------------
 #====================================================================
-# --- Liens Dropbox ---
 point_url = "https://www.dropbox.com/scl/fi/rgf74oa5eldfci8f5lems/Boite_aux_lettres.gpkg?rlkey=b6r4flk6158dy4mze9m8f81rp&st=dcgum783&dl=1"
 polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_09072020.gpkg?rlkey=15vxwezrwbo11rtfuxh2z91un&st=c05wbp5m&dl=1"
 
@@ -183,10 +182,8 @@ polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_0
 os.makedirs("temp_gpkg", exist_ok=True)
 
 # --- Téléchargement des fichiers ---
-for url, path in [
-    (point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
-    (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")
-]:
+for url, path in [(point_url, "temp_gpkg/Boite_aux_lettres.gpkg"),
+                  (polygon_url, "temp_gpkg/lim_lefini_09072020.gpkg")]:
     r = requests.get(url)
     if r.status_code == 200:
         with open(path, "wb") as f:
@@ -198,41 +195,42 @@ for url, path in [
 point_gdf = gpd.read_file("temp_gpkg/Boite_aux_lettres.gpkg")
 polygon_gdf = gpd.read_file("temp_gpkg/lim_lefini_09072020.gpkg")
 
-# --- Reprojection WGS84 ---
+# --- Reprojection vers WGS84 ---
 point_gdf = point_gdf.to_crs(epsg=4326)
 polygon_gdf = polygon_gdf.to_crs(epsg=4326)
-point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
 
-# --- Préparation des données : df_filtered_2 doit déjà exister ---
+# --- Nettoyage des noms pour jointure ---
+point_gdf["name"] = point_gdf["name"].str.strip().str.lower()
 df_filtered_2["Communaute"] = df_filtered_2["Communaute"].str.strip().str.lower()
 
-# --- Calcul des stats par communauté ---
-stats_comm = df_filtered_2.groupby("Communaute").agg(
-    Total_griefs=('Communaute','count'),
-    Acheve=('Statut_traitement', lambda x: (x=="Achevé").sum()),
-    En_cours=('Statut_traitement', lambda x: (x=="En cours").sum()),
-    Perdu_de_vue=('Statut_traitement', lambda x: (x=="Perdu de vue").sum()),
-    A_traiter=('Statut_traitement', lambda x: (x=="A traiter").sum())
+# --- Statuts valides ---
+statuts_valides = ["Achevé", "En cours", "Perdu de vue", "A traiter"]
+
+# --- Préparation du résumé par communauté ---
+summary = df_filtered_2.groupby("Communaute").agg(
+    Total_griefs=pd.NamedAgg(column="Statut_traitement", aggfunc="count"),
+    Acheve=pd.NamedAgg(column="Statut_traitement", aggfunc=lambda x: (x=="Achevé").sum()),
+    En_cours=pd.NamedAgg(column="Statut_traitement", aggfunc=lambda x: (x=="En cours").sum()),
+    Perdu_de_vue=pd.NamedAgg(column="Statut_traitement", aggfunc=lambda x: (x=="Perdu de vue").sum()),
+    A_traiter=pd.NamedAgg(column="Statut_traitement", aggfunc=lambda x: (x=="A traiter").sum())
 ).reset_index()
 
-# --- Merge avec GeoDataFrame ---
-point_gdf = point_gdf.merge(stats_comm, left_on="name", right_on="Communaute", how="left")
+# --- Conversion en int pour éviter ValueError ---
+cols_stats = ["Total_griefs","Acheve","En_cours","Perdu_de_vue","A_traiter"]
+summary[cols_stats] = summary[cols_stats].apply(pd.to_numeric, errors='coerce').fillna(0).astype(int)
 
-# --- Fonction couleur par statut ---
-def couleur_statut(row):
-    if row["Total_griefs"] > 0:
-        if row["Acheve"] > 0:
-            return "green"
-        elif row["En_cours"] > 0 or row["Perdu_de_vue"] > 0:
-            return "orange"
-        elif row["A_traiter"] > 0:
-            return "red"
-    return "gray"
+# --- Jointure avec les points ---
+point_merged = point_gdf.merge(summary, left_on="name", right_on="Communaute", how="left")
+point_merged[cols_stats] = point_merged[cols_stats].fillna(0).astype(int)
+
+# --- Fonction couleur selon présence de grief ---
+def couleur_point(total):
+    return "gray" if total == 0 else "blue"
 
 # --- Création de la carte ---
 m = folium.Map(location=[-0.8, 17], zoom_start=6, tiles="CartoDB dark_matter")
 
-# --- Polygone Domaine ---
+# --- Ajout du polygone ---
 folium.GeoJson(
     polygon_gdf,
     name="Domaine",
@@ -240,38 +238,34 @@ folium.GeoJson(
     tooltip="Zone de projet"
 ).add_to(m)
 
-# --- Cluster des points ---
+# --- Cluster des villages ---
 marker_cluster = MarkerCluster(name="📍 Communautés").add_to(m)
 
-# --- Ajouter les points ---
-for _, row in point_gdf.iterrows():
-    couleur = couleur_statut(row)
-    total = int(row.get("Total_griefs", 0) or 0)
-    acheve = int(row.get("Acheve", 0) or 0)
-    en_cours = int(row.get("En_cours", 0) or 0)
-    perdu = int(row.get("Perdu_de_vue", 0) or 0)
-    a_traiter = int(row.get("A_traiter", 0) or 0)
-
+# --- Ajout des points ---
+for _, row in point_merged.iterrows():
+    total = row.get("Total_griefs", 0)
     popup_html = f"""
     <b>Communauté :</b> {row.get('Communaute', 'Inconnue')}<br>
     <b>Total griefs :</b> {total}<br>
-    <b>Achevé :</b> {acheve}<br>
-    <b>En cours :</b> {en_cours}<br>
-    <b>Perdu de vue :</b> {perdu}<br>
-    <b>À traiter :</b> {a_traiter}
+    <b>Achevé :</b> {row.get('Acheve', 0)}<br>
+    <b>En cours :</b> {row.get('En_cours', 0)}<br>
+    <b>Perdu de vue :</b> {row.get('Perdu_de_vue', 0)}<br>
+    <b>A traiter :</b> {row.get('A_traiter', 0)}
     """
     folium.CircleMarker(
         location=[row.geometry.y, row.geometry.x],
         radius=6,
         color="white",
         fill=True,
-        fill_color=couleur,
+        fill_color=couleur_point(total),
         fill_opacity=0.9,
-        popup=folium.Popup(popup_html, max_width=300)
+        popup=folium.Popup(popup_html, max_width=250)
     ).add_to(marker_cluster)
 
-# --- Layer Control et CSS compact ---
+# --- Layer control ---
 folium.LayerControl(collapsed=False).add_to(m)
+
+# --- CSS LayerControl ---
 macro = MacroElement()
 macro._template = Template("""
 {% macro html(this, kwargs) %}
@@ -288,7 +282,7 @@ macro._template = Template("""
 m.get_root().add_child(macro)
 
 # --- Affichage Streamlit ---
-st.subheader("📍 Carte de localisation des boîtes à grief")
+st.subheader("📍 Carte de localisation des communautés")
 st_folium(m, width=900, height=500)
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
