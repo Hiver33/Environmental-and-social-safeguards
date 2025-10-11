@@ -176,7 +176,6 @@ for col,(val,label),color in zip(cols,metrics,card_colors):
 # --------------------- Carte de localisation -----------------------
 #====================================================================
 # --- Liens Dropbox ---
-# --- Liens GeoPackages ---
 point_url = "https://www.dropbox.com/scl/fi/rgf74oa5eldfci8f5lems/Boite_aux_lettres.gpkg?rlkey=b6r4flk6158dy4mze9m8f81rp&st=dcgum783&dl=1"
 polygon_url = "https://www.dropbox.com/scl/fi/cqu74x55xo8phugzct5af/lim_lefini_09072020.gpkg?rlkey=15vxwezrwbo11rtfuxh2z91un&st=c05wbp5m&dl=1"
 
@@ -291,7 +290,6 @@ m.get_root().add_child(macro)
 # --- Affichage Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
 st_folium(m, width=900, height=500)
-
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
 #====================================================================
