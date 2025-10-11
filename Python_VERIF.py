@@ -282,7 +282,7 @@ m.get_root().add_child(macro)
 
 # --- Affichage dans Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
-st.folium(m, width = 800, height = 400)
+st_folium(m, width = 800, height = 400)
 
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
