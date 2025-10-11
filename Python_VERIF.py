@@ -213,7 +213,7 @@ def couleur_statut(statut):
     return "gray"
 
 # --- Création de la carte ---
-m = folium.Map(location=[-0.7, 17], zoom_start=5.3, tiles="CartoDB dark_matter")
+m = folium.Map(location=[-0.7, 17], zoom_start=6, tiles="CartoDB dark_matter")
 
 # --- Polygone Domaine ---
 folium.GeoJson(
@@ -282,7 +282,7 @@ m.get_root().add_child(macro)
 
 # --- Affichage dans Streamlit ---
 st.subheader("📍 Carte de localisation des boîtes à grief")
-st_folium(m, width = 800, height = 400)
+st_folium(m, width = 800, height = 420)
 
 #====================================================================
 # --------------------- Graphiques principaux -----------------------
