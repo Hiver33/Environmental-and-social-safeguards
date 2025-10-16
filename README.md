@@ -24,6 +24,7 @@ Track status, category, and evolution of complaints with **dynamic filtering** a
   - Ongoing  
   - Unprocessed  
 - 📈 **Visual analytics**:
+  - **Interactive map** for grievance box locations and status tracking
   - **Bar chart**: Distribution by submission type (ascending)  
   - **Pie chart**: General progress of grievances (**fixed colors, green for Completed**)  
   - **Histogram**: Complaints by nature, color-coded by status  
@@ -32,7 +33,8 @@ Track status, category, and evolution of complaints with **dynamic filtering** a
   - **Pie chart**: Complaints by gender  
   - **Line chart**: Monthly/quarterly trend of grievances (Top N selectable, filterable by quarter)  
   - **Bar chart**: Average processing duration by grievance type  
-- 🖥️ **Responsive layout** with optional **full-screen mode**  
+- 🖥️ **Responsive layout** with optional **full-screen mode**
+- 🎨 **Light/Dark theme swichting** for improved accessibility
 - 📂 **Data table** displaying detailed grievance records  
 - ☁️ **Ready for deployment** on Streamlit Cloud  
 
@@ -50,9 +52,15 @@ Track status, category, and evolution of complaints with **dynamic filtering** a
 
 - **Python 3.9+**  
 - **Streamlit**  
-- **Pandas**  
+- **Pandas**
+- **Geopandas**
+- **Folium**
+- **Streamlit-folium**
+- **Requests**
+- **Branca**
+- **matplotlib**  
 - **Plotly Express**  
-- **OpenPyXL**  
+- **OpenPyXL**
 
 ---
 
